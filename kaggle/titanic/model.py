@@ -51,6 +51,7 @@ def convert_pandas_dataframe_to_batch_form_dictionary(
 
     :return (dict): resulting dictionary in the JSON format that can be submitted to "batch_predict" HTTP API.
     """
+    # TODO: <Alex>Additional precautions against very large batch sizes requested would be highly advisable..</Alex>
     if num_samples > df_data.shape[0]:
         num_samples = df_data.shape[0]
 
