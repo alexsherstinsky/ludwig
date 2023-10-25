@@ -11,7 +11,7 @@ from ludwig.datasets import titanic
 
 class TitanicModel:
     def __init__(self):
-        titanic_config = yaml.safe_load(
+        titanic_config: dict = yaml.safe_load(
             """
             input_features:
                 - name: Pclass
@@ -56,7 +56,7 @@ class TitanicModel:
     def df_test_set(self) -> pd.DataFrame:
         return self._df_test_set
 
-    def train(self, df_dataset) -> TrainingResults:
+    def train(self, df_dataset: pd.DataFrame) -> TrainingResults:
         return self._model.train(dataset=df_dataset)
 
     def predict(self, df_dataset: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -64,6 +64,8 @@ class TitanicModel:
         return predictions_and_probabilities
 
     @staticmethod
-    def get_train_and_test_dataframes():
+    def get_train_and_test_dataframes() -> tuple[pd.DataFrame, pd.DataFrame]:
+        df_training_set: pd.DataFrame
+        df_test_set: pd.DataFrame
         df_training_set, df_test_set, _ = titanic.load(split=True)
         return df_training_set, df_test_set
