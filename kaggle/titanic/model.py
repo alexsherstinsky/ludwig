@@ -89,19 +89,24 @@ class TitanicModel:
     def train(self, dataset: str | dict | pd.DataFrame) -> TrainingResults:
         return self._model.train(dataset=dataset, output_directory=self._output_directory)
 
-    def predict(self, dataset: str | dict | pd.DataFrame) -> dict | pd.DataFrame:
+    def predict(self, dataset: str | dict | pd.DataFrame) -> tuple[dict | pd.DataFrame, bool, str | None]:
+        model_in_memory: bool = True
+        model_directory_path_as_string: str | None = None
+
         predictions_and_probabilities: tuple[dict | pd.DataFrame, str]
         try:
             predictions_and_probabilities = self._model.predict(
                 dataset=dataset, output_directory=self._output_directory
             )
         except ValueError:  # Model has not been trained or loaded.
-            self._model = LudwigModel.load(model_dir=self._model_directory_path.as_posix())  # Use default path.
+            model_directory_path_as_string = self._model_directory_path.as_posix()
+            self._model = LudwigModel.load(model_dir=model_directory_path_as_string)  # Use default saved model path.
             predictions_and_probabilities = self._model.predict(
                 dataset=dataset, output_directory=self._output_directory
             )
+            model_in_memory = False
 
-        return predictions_and_probabilities[0]
+        return predictions_and_probabilities[0], model_in_memory, model_directory_path_as_string
 
     @staticmethod
     def get_train_and_test_dataframes() -> tuple[pd.DataFrame, pd.DataFrame]:
