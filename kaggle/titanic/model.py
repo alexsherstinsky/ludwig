@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import pathlib
 
 import pandas as pd
 import yaml
@@ -9,8 +10,25 @@ from ludwig.api import LudwigModel, TrainingResults
 from ludwig.datasets import titanic
 
 
+def convert_dictionary_to_pandas_dataframe(sample_dictionary: dict) -> pd.DataFrame:
+    """Converts each saclar dictionary value to list of length one, containing that value.
+
+    Then the resulting dictionary is used to instantiate a Pandas DataFrame, which is returned to be used as "dataset"
+    argument to "model.predict()".
+    """
+    sample_data_items: list[tuple] = sample_dictionary.items()
+    sample_data_items = [(item[0], [item[1]]) for item in sample_data_items]
+    df_sample: pd.DataFrame = pd.DataFrame(data=dict(sample_data_items))
+
+    return df_sample
+
+
 class TitanicModel:
-    def __init__(self):
+    def __init__(
+        self,
+        output_directory: str = "results",
+        model_directory_relative_path: pathlib.Path = pathlib.Path("api_experiment_run/model"),
+    ):
         titanic_config: dict = yaml.safe_load(
             """
             input_features:
@@ -44,6 +62,10 @@ class TitanicModel:
 
         self._df_training_set, self._df_test_set = self.get_train_and_test_dataframes()
 
+        self._output_directory: str = output_directory
+
+        self._model_directory_path: pathlib.Path = pathlib.Path(self._output_directory) / model_directory_relative_path
+
     @property
     def config(self) -> dict:
         return self._titanic_config
@@ -56,16 +78,35 @@ class TitanicModel:
     def df_test_set(self) -> pd.DataFrame:
         return self._df_test_set
 
-    def train(self, df_dataset: pd.DataFrame) -> TrainingResults:
-        return self._model.train(dataset=df_dataset)
+    @property
+    def output_directory(self) -> str:
+        return self._output_directory
 
-    def predict(self, df_dataset: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-        predictions_and_probabilities: tuple[pd.DataFrame, pd.DataFrame] = self._model.predict(dataset=df_dataset)
-        return predictions_and_probabilities
+    @property
+    def model_directory_relative_path(self) -> pathlib.Path:
+        return self._model_directory_relative_path
+
+    def train(self, dataset: str | dict | pd.DataFrame) -> TrainingResults:
+        return self._model.train(dataset=dataset, output_directory=self._output_directory)
+
+    def predict(self, dataset: str | dict | pd.DataFrame) -> dict | pd.DataFrame:
+        predictions_and_probabilities: tuple[dict | pd.DataFrame, str]
+        try:
+            predictions_and_probabilities = self._model.predict(
+                dataset=dataset, output_directory=self._output_directory
+            )
+        except ValueError:  # Model has not been trained or loaded.
+            self._model = LudwigModel.load(model_dir=self._model_directory_path.as_posix())  # Use default path.
+            predictions_and_probabilities = self._model.predict(
+                dataset=dataset, output_directory=self._output_directory
+            )
+
+        return predictions_and_probabilities[0]
 
     @staticmethod
     def get_train_and_test_dataframes() -> tuple[pd.DataFrame, pd.DataFrame]:
         df_training_set: pd.DataFrame
         df_test_set: pd.DataFrame
         df_training_set, df_test_set, _ = titanic.load(split=True)
+
         return df_training_set, df_test_set
