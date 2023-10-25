@@ -48,14 +48,7 @@ def predict():
     sample_data: dict = request.get_json()
     df_sample: pd.DataFrame = convert_dictionary_to_pandas_dataframe(sample_dictionary=sample_data)
 
-    df_predictions_and_probabilities: pd.DataFrame
-    model_in_memory: bool
-    model_directory_path: str | None
-    df_predictions_and_probabilities, model_in_memory, model_directory_path = titanic_model.predict(dataset=df_sample)
-
-    result: dict = df_predictions_and_probabilities.to_dict()
-    result["model_in_memory"] = model_in_memory
-    result["model_load_path"] = model_directory_path
+    result: dict = _run_model_predictions_on_sample_pandas_dataframe(dataset=df_sample)
 
     return jsonify(result), 200
 
@@ -77,13 +70,19 @@ def batch_predict():
     data_samples = json.loads(data_samples["dataset"][1])
     df_samples: pd.DataFrame = pd.DataFrame(**data_samples)
 
+    result: dict = _run_model_predictions_on_sample_pandas_dataframe(dataset=df_samples)
+
+    return jsonify(result), 200
+
+
+def _run_model_predictions_on_sample_pandas_dataframe(dataset: pd.DataFrame) -> dict:
     df_predictions_and_probabilities: pd.DataFrame
     model_in_memory: bool
     model_directory_path: str | None
-    df_predictions_and_probabilities, model_in_memory, model_directory_path = titanic_model.predict(dataset=df_samples)
+    df_predictions_and_probabilities, model_in_memory, model_directory_path = titanic_model.predict(dataset=dataset)
 
     result: dict = df_predictions_and_probabilities.to_dict()
     result["model_in_memory"] = model_in_memory
     result["model_load_path"] = model_directory_path
 
-    return jsonify(result), 200
+    return result
