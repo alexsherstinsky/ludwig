@@ -145,17 +145,11 @@ class TitanicModel:
         model_in_memory: bool = self.check_model_is_trained()
         model_directory_path_as_string: str | None = None
 
-        predictions_and_probabilities: tuple[dict | pd.DataFrame, str]
-        if model_in_memory:
-            predictions_and_probabilities = self._model.predict(
-                dataset=dataset, output_directory=self._output_directory
-            )
-        else:
+        if not model_in_memory:
             model_directory_path_as_string = self._model_directory_path.as_posix()
             self._model = LudwigModel.load(model_dir=model_directory_path_as_string)  # Use default saved model path.
-            predictions_and_probabilities = self._model.predict(
-                dataset=dataset, output_directory=self._output_directory
-            )
+
+        predictions_and_probabilities = self._model.predict(dataset=dataset, output_directory=self._output_directory)
 
         return predictions_and_probabilities[0], model_in_memory, model_directory_path_as_string
 
