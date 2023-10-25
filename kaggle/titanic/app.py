@@ -75,20 +75,8 @@ def batch_predict():
         df_data=titanic_model.df_test_set, num_samples=num_samples
     )
     data_samples = json.loads(data_samples["dataset"][1])
-    # TODO: <Alex>ALEX</Alex>
-    # TODO: <Alex>ALEX</Alex>
-    # TODO: <Alex>ALEX</Alex>
-    # data_samples = data_samples["dataset"][1]
-    # # data_samples = data_samples["index"]
-    # # data_samples = str(type(data_samples))
-    # data_samples = json.loads(data_samples)
-    # # TODO: <Alex>ALEX</Alex>
-    # # data_samples = data_samples["columns"]
-    # TODO: <Alex>ALEX</Alex>
-    # TODO: <Alex>ALEX</Alex>
     df_samples: pd.DataFrame = pd.DataFrame(**data_samples)
-    # TODO: <Alex>ALEX</Alex>
-    #
+
     df_predictions_and_probabilities: pd.DataFrame
     model_in_memory: bool
     model_directory_path: str | None
@@ -97,14 +85,5 @@ def batch_predict():
     result: dict = df_predictions_and_probabilities.to_dict()
     result["model_in_memory"] = model_in_memory
     result["model_load_path"] = model_directory_path
-    # TODO: <Alex>ALEX</Alex>
 
-    # TODO: <Alex>ALEX</Alex>
-    # result = data_samples
-    # TODO: <Alex>ALEX</Alex>
-    # TODO: <Alex>ALEX</Alex>
     return jsonify(result), 200
-    # TODO: <Alex>ALEX</Alex>
-    # TODO: <Alex>ALEX</Alex>
-    # return jsonify(input_params), 200
-    # TODO: <Alex>ALEX</Alex>
