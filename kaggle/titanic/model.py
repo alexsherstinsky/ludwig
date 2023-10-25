@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import pathlib
 
@@ -9,18 +10,58 @@ import yaml
 from ludwig.api import LudwigModel, TrainingResults
 from ludwig.datasets import titanic
 
+DEFAULT_RANDOM_STATE: int = 200
+
 
 def convert_dictionary_to_pandas_dataframe(sample_dictionary: dict) -> pd.DataFrame:
     """Converts each saclar dictionary value to list of length one, containing that value.
 
     Then the resulting dictionary is used to instantiate a Pandas DataFrame, which is returned to be used as "dataset"
     argument to "model.predict()".
+
+    # Inputs
+
+    :param :sample_dictionary (dict): input dictionary with each value being a scalar (not Iterable)
+
+    # Return
+
+    :return (pd.DataFrame): resulting Pandas DataFrame (after each value of the dictionary is turned into a list of one)
     """
     sample_data_items: list[tuple] = sample_dictionary.items()
+    # TODO: <Alex>Add an assertion that each value (item[1] in the next line) is not iterable.</Alex>
     sample_data_items = [(item[0], [item[1]]) for item in sample_data_items]
     df_sample: pd.DataFrame = pd.DataFrame(data=dict(sample_data_items))
 
     return df_sample
+
+
+def convert_pandas_dataframe_to_batch_form_dictionary(
+    df_data: pd.DataFrame, num_samples: int = 1, random_state: int = DEFAULT_RANDOM_STATE
+) -> dict:
+    """Converts input DataFrame to dictionary user "split" format so that it can be submitted to "batch_predict"
+    API.
+
+    # Inputs
+
+    :param :df_data (pd.DataFrame): input Pandas DataFrame (e.g., from test/evaluation dataset)
+    :param :num_samples (int, optional): number of random samples from input DataDrame to return (detault is 1)
+    :param :random_state (int, optional): Seed for random number generation (default is DEFAULT_RANDOM_STATE).
+
+    # Return
+
+    :return (dict): resulting dictionary in the JSON format that can be submitted to "batch_predict" HTTP API.
+    """
+    if num_samples > df_data.shape[0]:
+        num_samples = df_data.shape[0]
+
+    df_data = df_data.sample(n=num_samples, random_state=random_state)
+    data: dict = df_data.to_dict(orient="split")
+
+    post_submission: dict = {
+        "dataset": (None, json.dumps(data), "application/json"),
+    }
+
+    return post_submission
 
 
 class TitanicModel:

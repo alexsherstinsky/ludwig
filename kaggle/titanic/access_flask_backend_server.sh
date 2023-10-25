@@ -26,5 +26,10 @@ curl localhost:5000/input-features
 
 
 # run a single prediction on Titanic model
-echo "Titanic inference results"
+echo "Titanic single sample inference result"
 curl -X POST -H "Content-Type: application/json" -d '{"Pclass": 3, "Sex": "male", "Age": 34.5, "SibSp": 0, "Parch": 0, "Fare": 7.8292, "Embarked": "Q"}' http://localhost:5000/predict
+
+
+# run a Batch prediction on Titanic model
+echo "Titanic Batch of samples inference results"
+curl -X POST -H "Content-Type: application/json" -d '{"num_samples": 3}' http://localhost:5000/batch-predict
