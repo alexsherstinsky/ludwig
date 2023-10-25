@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # TODO: <Alex>ALEX</Alex>
 # from flask import Flask, jsonify, request
 # TODO: <Alex>ALEX</Alex>

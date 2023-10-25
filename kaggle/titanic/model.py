@@ -1,16 +1,11 @@
+from __future__ import annotations
+
 import logging
 
-# TODO: <Alex>ALEX</Alex>
-# import numpy as np
-# import pandas as pd
-# TODO: <Alex>ALEX</Alex>
+import pandas as pd
 import yaml
 
-# TODO: <Alex>ALEX</Alex>
-# import ludwig
 from ludwig.api import LudwigModel, TrainingResults
-
-# TODO: <Alex>ALEX</Alex>
 from ludwig.datasets import titanic
 
 
@@ -43,29 +38,30 @@ class TitanicModel:
                   type: binary
             """
         )
-        self._model = LudwigModel(config=titanic_config, logging_level=logging.INFO)
+        self._model: LudwigModel = LudwigModel(config=titanic_config, logging_level=logging.INFO)
 
-        self._titanic_config = titanic_config
+        self._titanic_config: dict = titanic_config
 
         self._df_training_set, self._df_test_set = self.get_train_and_test_dataframes()
 
     @property
-    def config(self):
+    def config(self) -> dict:
         return self._titanic_config
 
     @property
-    def df_training_set(self):
+    def df_training_set(self) -> pd.DataFrame:
         return self._df_training_set
 
     @property
-    def df_test_set(self):
+    def df_test_set(self) -> pd.DataFrame:
         return self._df_test_set
 
     def train(self, df_dataset) -> TrainingResults:
         return self._model.train(dataset=df_dataset)
 
-    def predict(self, df_dataset):
-        return self._model.predict(dataset=df_dataset)
+    def predict(self, df_dataset: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+        predictions_and_probabilities: tuple[pd.DataFrame, pd.DataFrame] = self._model.predict(dataset=df_dataset)
+        return predictions_and_probabilities
 
     @staticmethod
     def get_train_and_test_dataframes():
