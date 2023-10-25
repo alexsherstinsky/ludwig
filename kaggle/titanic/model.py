@@ -71,6 +71,10 @@ class TitanicModel:
         return self._titanic_config
 
     @property
+    def full_config(self) -> dict:
+        return self._model.config_obj.to_dict()
+
+    @property
     def df_training_set(self) -> pd.DataFrame:
         return self._df_training_set
 

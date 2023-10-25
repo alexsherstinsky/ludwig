@@ -5,9 +5,14 @@
 echo "root page"
 curl http://localhost:5000/
 
-# get Titanic config
+
+# get Titanic Ludwig config
 echo "Titanic config"
 curl localhost:5000/config
+
+# get Titanic full Ludwig config
+echo "Titanic full config"
+curl localhost:5000/full-config
 
 # TODO: <Alex>ALEX</Alex>
 ## train Titanic model
