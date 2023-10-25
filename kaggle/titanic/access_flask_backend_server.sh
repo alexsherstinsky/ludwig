@@ -32,4 +32,4 @@ curl -X POST -H "Content-Type: application/json" -d '{"Pclass": 3, "Sex": "male"
 
 # run a Batch prediction on Titanic model
 echo "Titanic Batch of samples inference results"
-curl -X POST -H "Content-Type: application/json" -d '{"num_samples": 3}' http://localhost:5000/batch-predict
+curl -X POST -H "Content-Type: application/json" -d '{"num_samples": 4}' http://localhost:5000/batch-predict
