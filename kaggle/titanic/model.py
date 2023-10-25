@@ -60,6 +60,8 @@ class TitanicModel:
 
         self._titanic_config: dict = titanic_config
 
+        self._titanic_inoput_features: list[str] = self._get_input_features()
+
         self._df_training_set, self._df_test_set = self.get_train_and_test_dataframes()
 
         self._output_directory: str = output_directory
@@ -73,6 +75,10 @@ class TitanicModel:
     @property
     def full_config(self) -> dict:
         return self._model.config_obj.to_dict()
+
+    @property
+    def input_features(self) -> list[str]:
+        return self._titanic_inoput_features
 
     @property
     def df_training_set(self) -> pd.DataFrame:
@@ -119,3 +125,8 @@ class TitanicModel:
         df_training_set, df_test_set, _ = titanic.load(split=True)
 
         return df_training_set, df_test_set
+
+    def _get_input_features(self) -> list[str]:
+        input_features: list[str] = [feature.column for feature in self._model.config_obj.input_features]
+
+        return input_features

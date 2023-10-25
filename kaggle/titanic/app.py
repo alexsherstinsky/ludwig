@@ -26,6 +26,11 @@ def get_full_config():
     return jsonify(titanic_model.full_config)
 
 
+@app.route("/input-features")
+def get_input_features():
+    return jsonify(titanic_model.input_features)
+
+
 @app.route("/train")
 def train():
     train_stats, _, _ = titanic_model.train(dataset=titanic_model.df_training_set)

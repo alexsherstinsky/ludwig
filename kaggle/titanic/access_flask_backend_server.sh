@@ -14,6 +14,10 @@ curl localhost:5000/config
 echo "Titanic full config"
 curl localhost:5000/full-config
 
+# get Titanic input features
+echo "Titanic input features"
+curl localhost:5000/input-features
+
 # TODO: <Alex>ALEX</Alex>
 ## train Titanic model
 #echo "Titanic training statistics"
