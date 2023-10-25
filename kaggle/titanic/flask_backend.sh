@@ -1,3 +1,3 @@
 #!/bin/sh
-export FLASK_APP=./index.py
+export FLASK_APP=./app.py
 conda run -n ludwig flask --debug run -h 0.0.0.0
