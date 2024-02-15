@@ -310,10 +310,13 @@ class LudwigModel:
             config_dict = copy.deepcopy(config)
             self.config_fp = None  # type: ignore [assignment]
 
+        print(f'\n[ALEX_TEST] [LudwigModel.__INIT__()] CONFIG_DICT:\n{config_dict} ; TYPE: {str(type(config_dict))}')
         self._user_config = upgrade_config_dict_to_latest_version(config_dict)
+        print(f'\n[ALEX_TEST] [LudwigModel.__INIT__()] SELF._USER_CONFIG:\n{self._user_config} ; TYPE: {str(type(self._user_config))}')
 
         # Initialize the config object
         self.config_obj = ModelConfig.from_dict(self._user_config)
+        print(f'\n[ALEX_TEST] [LudwigModel.__INIT__()] SELF.CONFIG_OBJ:\n{self.config_obj} ; TYPE: {str(type(self.config_obj))}')
 
         # setup logging
         self.set_logging_level(logging_level)
@@ -329,7 +332,7 @@ class LudwigModel:
 
         # setup model
         self.model = None
-        self.training_set_metadata: Optional[str, dict] = None
+        self.training_set_metadata: Optional[Dict[str, dict]] = None
 
         # online training state
         self._online_trainer = None
@@ -355,6 +358,7 @@ class LudwigModel:
             logger.warning(f"LLM was initialized on {self.model.model.device}. Moving to GPU for inference.")
             self.model.model.to(torch.device("cuda"))
 
+    # TODO: <Alex>ALEX -- Refactor this long method.</Alex>
     def train(
         self,
         dataset: Optional[Union[str, dict, pd.DataFrame]] = None,
@@ -468,6 +472,8 @@ class LudwigModel:
             `output_directory` filepath to where training results are stored.
         """
         # Only reset the metadata if the model has not been trained before
+        print(f'\n[ALEX_TEST] [LudwigModel.train()] AT_TRAINER_BEGIN-SELF.TRAINING_SET_METADATA:\n{self.training_set_metadata} ; TYPE: {str(type(self.training_set_metadata))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.train()] AT_TRAINER_BEGIN-MODEL_RESUME_PATH:\n{model_resume_path} ; TYPE: {str(type(model_resume_path))}')
         if self.training_set_metadata:
             logger.warning(
                 "This model has been trained before. Its architecture has been defined by the original training set "
@@ -481,7 +487,9 @@ class LudwigModel:
             print_boxed("WARNING")
             logger.warning(HYPEROPT_WARNING)
 
+        # TODO: <Alex>ALEX This and next "if" statements should be combined into if/else</Alex>
         # setup directories and file names
+        print(f'\n[ALEX_TEST] [LudwigModel.train()] AT_TRAINER_BEGIN-SELF.BACKEND:\n{self.backend} ; TYPE: {str(type(self.backend))} ; SELF.BACKEND.IS_COORDINATOR: {self.backend.is_coordinator():}')
         if model_resume_path is not None:
             if path_exists(model_resume_path):
                 output_directory = model_resume_path
@@ -494,6 +502,7 @@ class LudwigModel:
                     )
                 model_resume_path = None
 
+        # TODO: <Alex>ALEX This and previous "if" statements should be combined into if/else</Alex>
         if model_resume_path is None:
             if self.backend.is_coordinator():
                 output_directory = get_output_directory(output_directory, experiment_name, model_name)
@@ -512,8 +521,12 @@ class LudwigModel:
         )
 
         output_url = output_directory
+        print(f'\n[ALEX_TEST] [LudwigModel.train()] OUTPUT_DIRECTORY=OUTPUT_URL:\n{output_directory} ; TYPE: {str(type(output_directory))} ; SHOULD_CREATE_OUTPUT_DIRECTORY: {should_create_output_directory}')
         with upload_output_directory(output_directory) as (output_directory, upload_fn):
+            print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-AS_OUTPUT_DIRECTORY:\n{output_directory} ; TYPE: {str(type(output_directory))}')
+            print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-AS_UPLOAD_FN:\n{upload_fn} ; TYPE: {str(type(upload_fn))}')
             train_callbacks = self.callbacks
+            print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-TRAIN_CALLBACKS-0:\n{train_callbacks} ; TYPE: {str(type(train_callbacks))}')
             if upload_fn is not None:
                 # Upload output files (checkpoints, etc.) to remote storage at the end of
                 # each epoch and evaluation, in case of failure in the middle of training.
@@ -525,18 +538,26 @@ class LudwigModel:
                         upload_fn()
 
                 train_callbacks = train_callbacks + [UploadOnEpochEndCallback()]
+            print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-TRAIN_CALLBACKS-1:\n{train_callbacks} ; TYPE: {str(type(train_callbacks))}')
 
+            # TODO: <Alex>ALEX-These variables mean different things, so they should be initialized to None separately.</Alex>
+            # TODO: <Alex>ALEX-These Spell out "fn" for "file_name"; otherwise, easily confused with "function".</Alex>
             description_fn = training_stats_fn = model_dir = None
             if self.backend.is_coordinator():
                 if should_create_output_directory:
                     makedirs(output_directory, exist_ok=True)
                 description_fn, training_stats_fn, model_dir = get_file_names(output_directory)
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-DESCRIPTION_FILE_NAME:\n{description_fn} ; TYPE: {str(type(description_fn))}')
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-TRAINING_STATS_FILE_NAME:\n{training_stats_fn} ; TYPE: {str(type(training_stats_fn))}')
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-MODEL_DIR:\n{model_dir} ; TYPE: {str(type(model_dir))}')
 
             if isinstance(training_set, Dataset) and training_set_metadata is not None:
                 preprocessed_data = (training_set, validation_set, test_set, training_set_metadata)
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-PREPROCESSED_DATA-0:\n{preprocessed_data} ; TYPE: {str(type(preprocessed_data))}')
             else:
                 # save description
                 if self.backend.is_coordinator():
+                    # TODO: <Alex>ALEX Add type hint</Alex>
                     description = get_experiment_description(
                         self.config_obj.to_dict(),
                         dataset=dataset,
@@ -548,19 +569,24 @@ class LudwigModel:
                         backend=self.backend,
                         random_seed=random_seed,
                     )
+                    # print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-DESCRIPTION:\n{description} ; TYPE: {str(type(description))}')
 
                     if not skip_save_training_description:
                         save_json(description_fn, description)
 
                     # print description
+                    # TODO: <Alex>ALEX -- Add type hint.</Alex>
                     experiment_description = [
                         ["Experiment name", experiment_name],
                         ["Model name", model_name],
                         ["Output directory", output_directory],
                     ]
+                    # print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-EXPERIMENT_DESCRIPTION:\n{experiment_description} ; TYPE: {str(type(experiment_description))}')
+                    # TODO: <Alex>ALEX - Simplify the next loop using comprehension.</Alex>
                     for key, value in description.items():
                         if key != "config":  # Config is printed separately.
                             experiment_description.append([key, pformat(value, indent=4)])
+                    print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-EXPERIMENT_DESCRIPTION:\n{experiment_description} ; TYPE: {str(type(experiment_description))}')
 
                     if self.backend.is_coordinator():
                         print_boxed("EXPERIMENT DESCRIPTION")
@@ -569,11 +595,14 @@ class LudwigModel:
                         print_boxed("LUDWIG CONFIG")
                         logger.info("User-specified config (with upgrades):\n")
                         logger.info(pformat(self._user_config, indent=4))
+                        # TODO: <Alex>ALEX -- The following statement is wrong; here, the description is saved into "description_fn"; later, within trainer, it is saved into "model_hyperparameters.json" (use defined global constants for directory and file names).</Alex>
                         logger.info(
                             "\nFull config saved to:\n"
                             f"{output_directory}/{experiment_name}/model/model_hyperparameters.json"
                         )
 
+                # TODO: <Alex>ALEX -- Add type hint</Alex>
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] WHITHIN_UPLOAD_OUTPUT_DIRECTORY-EXPERIMENT_DESCRIPTION##ABOUT_TO_CALL_SELF.PREPROCESS_WITH_KWARGS:\n{kwargs} ; TYPE: {str(type(kwargs))}')
                 preprocessed_data = self.preprocess(  # type: ignore[assignment]
                     dataset=dataset,
                     training_set=training_set,
@@ -595,6 +624,10 @@ class LudwigModel:
                     **kwargs,
                 )
                 (training_set, validation_set, test_set, training_set_metadata) = preprocessed_data
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] TRAINING_SET:\n{training_set} ; TYPE: {str(type(training_set))}')
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] VALIDATION_SET:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] TEST_SET:\n{test_set} ; TYPE: {str(type(test_set))}')
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
 
             self.training_set_metadata = training_set_metadata
 
@@ -611,6 +644,7 @@ class LudwigModel:
                 logger.info("\nDataset Statistics")
                 logger.info(tabulate(dataset_statistics, headers="firstrow", tablefmt="fancy_grid"))
 
+            print(f'\n[ALEX_TEST] [LudwigModel.train()] SELF.CALLBACKS:\n{self.callbacks} ; TYPE: {str(type(self.callbacks))}')
             for callback in self.callbacks:
                 callback.on_train_init(
                     base_config=self._user_config,
@@ -623,6 +657,7 @@ class LudwigModel:
 
             # Build model if not provided
             # if it was provided it means it was already loaded
+            print(f'\n[ALEX_TEST] [LudwigModel.train()] SELF.MODEL-0:\n{self.model} ; TYPE: {str(type(self.model))}')
             if not self.model:
                 if self.backend.is_coordinator():
                     print_boxed("MODEL")
@@ -633,11 +668,13 @@ class LudwigModel:
                 # update config with properties determined during model instantiation
                 update_config_with_model(self.config_obj, self.model)
                 set_saved_weights_in_checkpoint_flag(self.config_obj)
+            print(f'\n[ALEX_TEST] [LudwigModel.train()] SELF.MODEL-1:\n{self.model} ; TYPE: {str(type(self.model))}')
 
             # auto tune learning rate
             if hasattr(self.config_obj.trainer, "learning_rate") and self.config_obj.trainer.learning_rate == AUTO:
                 detected_learning_rate = get_auto_learning_rate(self.config_obj)
                 self.config_obj.trainer.learning_rate = detected_learning_rate
+            print(f'\n[ALEX_TEST] [LudwigModel.train()] SELF.CONFIG_OBJ.TRAINER.LEARNING_RATE:\n{self.config_obj.trainer.learning_rate} ; TYPE: {str(type(self.config_obj.trainer.learning_rate))}')
 
             with self.backend.create_trainer(
                 model=self.model,
@@ -649,9 +686,11 @@ class LudwigModel:
                 callbacks=train_callbacks,
                 random_seed=random_seed,
             ) as trainer:
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] OBTAINED_WITH_BACKEND_CREATE_TRAINER():\n{trainer} ; TYPE: {str(type(trainer))}')
                 # auto tune batch size
                 self._tune_batch_size(trainer, training_set, random_seed=random_seed)
 
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] SELF.CONFIG_OBJ.MODEL_TYPE:\n{self.config_obj.model_type} ; TYPE: {str(type(self.config_obj.model_type))}')
                 if (
                     self.config_obj.model_type == "LLM"
                     and trainer.config.type == "none"
@@ -660,11 +699,13 @@ class LudwigModel:
                 ):
                     trainer.model.initialize_adapter()  # Load pre-trained adapter weights for inference only
 
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] SKIP_SAVE_MODEL:\n{skip_save_model} ; TYPE: {str(type(skip_save_model))}')
                 # train model
                 if self.backend.is_coordinator():
                     print_boxed("TRAINING")
                     if not skip_save_model:
                         self.save_config(model_dir)
+                        print(f'\n[ALEX_TEST] [LudwigModel.train()] SAVED_CONFIG_INTO_MODEL_DIRECTORY:\n{model_dir} ; TYPE: {str(type(model_dir))}')
 
                 for callback in self.callbacks:
                     callback.on_train_start(
@@ -680,7 +721,12 @@ class LudwigModel:
                         test_set=test_set,
                         save_path=model_dir,
                     )
+                    print(f'\n[ALEX_TEST] [LudwigModel.train()] TRAIN_STATS:\n{train_stats} ; TYPE: {str(type(train_stats))}')
                     (self.model, train_trainset_stats, train_valiset_stats, train_testset_stats) = train_stats
+                    print(f'\n[ALEX_TEST] [LudwigModel.train()] SELF.MODEL-2:\n{self.model} ; TYPE: {str(type(self.model))}')
+                    print(f'\n[ALEX_TEST] [LudwigModel.train()] TRAIN_TRAINSET_STATS:\n{train_trainset_stats} ; TYPE: {str(type(train_trainset_stats))}')
+                    print(f'\n[ALEX_TEST] [LudwigModel.train()] TRAIN_VALISET_STATS:\n{train_valiset_stats} ; TYPE: {str(type(train_valiset_stats))}')
+                    print(f'\n[ALEX_TEST] [LudwigModel.train()] TRAIN_TESTSET_STATS:\n{train_testset_stats} ; TYPE: {str(type(train_testset_stats))}')
 
                     # Calibrates output feature probabilities on validation set if calibration is enabled.
                     # Must be done after training, and before final model parameters are saved.
@@ -690,6 +736,10 @@ class LudwigModel:
                             self.backend,
                             batch_size=trainer.eval_batch_size,
                         )
+                        # TODO: <Alex>ALEX</Alex>
+                        a = calibrator.calibration_enabled()
+                        print(f'\n[ALEX_TEST] [LudwigModel.train()] CALIBRATION_ENABLED:\n{a} ; TYPE: {str(type(a))}')
+                        # TODO: <Alex>ALEX</Alex>
                         if calibrator.calibration_enabled():
                             if validation_set is None:
                                 logger.warning(
@@ -711,6 +761,7 @@ class LudwigModel:
                             self.model.save(model_dir)
 
                     # Evaluation Frequency
+                    print(f'\n[ALEX_TEST] [LudwigModel.train()] SELF.CONFIG_OBJ.TRAINER.STEPS_PER_CHECKPOINT:\n{self.config_obj.trainer.steps_per_checkpoint} ; TYPE: {str(type(self.config_obj.trainer.steps_per_checkpoint))}')
                     if self.config_obj.model_type == MODEL_ECD and self.config_obj.trainer.steps_per_checkpoint:
                         evaluation_frequency = EvaluationFrequency(
                             self.config_obj.trainer.steps_per_checkpoint, EvaluationFrequency.STEP
@@ -721,6 +772,7 @@ class LudwigModel:
                         )
                     else:
                         evaluation_frequency = EvaluationFrequency(1, EvaluationFrequency.EPOCH)
+                    print(f'\n[ALEX_TEST] [LudwigModel.train()] EVALUATION_FREQUENCY:\n{evaluation_frequency} ; TYPE: {str(type(evaluation_frequency))}')
 
                     # Unpack train()'s return.
                     # The statistics are all nested dictionaries of TrainerMetrics: feature_name -> metric_name ->
@@ -733,6 +785,7 @@ class LudwigModel:
                         metric_utils.reduce_trainer_metrics_dict(train_testset_stats),
                         evaluation_frequency,
                     )
+                    print(f'\n[ALEX_TEST] [LudwigModel.train()] TRAIN_STATS:\n{train_stats} ; TYPE: {str(type(train_stats))}')
 
                     # save training statistics
                     if self.backend.is_coordinator():
@@ -753,6 +806,7 @@ class LudwigModel:
                             train_valiset_stats,
                             train_testset_stats,
                         )
+                        print(f'\n[ALEX_TEST] [LudwigModel.train()] TRAINING_REPORT:\n{training_report} ; TYPE: {str(type(training_report))}')
                         logger.info(tabulate(training_report, tablefmt="fancy_grid"))
                         logger.info(f"\nFinished: {experiment_name}_{model_name}")
                         logger.info(f"Saved to: {output_directory}")
@@ -760,6 +814,7 @@ class LudwigModel:
                     for callback in self.callbacks:
                         callback.on_train_end(output_directory)
 
+                # TODO: <Alex>ALEX -- Why is this operation being duplicated?  The variable "training_set_metadata" is not changed during training.</Alex>
                 self.training_set_metadata = training_set_metadata
 
                 # Ensure model weights are saved to the driver if training was done remotely
@@ -778,7 +833,16 @@ class LudwigModel:
                 self.backend.sync_model(self.model)
 
                 print_boxed("FINISHED")
-                return TrainingResults(train_stats, preprocessed_data, output_url)
+                # TODO: <Alex>ALEX</Alex>
+                a =  TrainingResults(train_stats=train_stats, preprocessed_data=preprocessed_data, output_directory=output_url)
+                # TODO: <Alex>ALEX</Alex>
+                # TODO: <Alex>ALEX</Alex>
+                # return TrainingResults(train_stats, preprocessed_data, output_url)
+                # TODO: <Alex>ALEX</Alex>
+                # TODO: <Alex>ALEX</Alex>
+                print(f'\n[ALEX_TEST] [LudwigModel.train()] RETURNING_TRAINING_RESULTS:\n{a} ; TYPE: {str(type(a))}')
+                return a
+                # TODO: <Alex>ALEX</Alex>
 
     def train_online(
         self,
@@ -1165,7 +1229,7 @@ class LudwigModel:
             will contain the training statistics, TensorBoard logs, the saved
             model and the training progress files.
         :param return_type: (Union[str, dict, pd.DataFrame], default: pandas.DataFrame) indicates
-            the format to of the returned predictions.
+            the format of the returned predictions.
 
         # Return
         :return: (`evaluation_statistics`, `predictions`, `output_directory`)
@@ -1191,6 +1255,8 @@ class LudwigModel:
             backend=self.backend,
             callbacks=self.callbacks,
         )
+        print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] DATASET:\n{dataset} ; TYPE: {str(type(dataset))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
 
         # Fallback to use eval_batch_size or batch_size if not provided
         if batch_size is None:
@@ -1201,10 +1267,15 @@ class LudwigModel:
 
         logger.debug("Predicting")
         with self.backend.create_predictor(self.model, batch_size=batch_size) as predictor:
+            print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] BATCH_SIZE:\n{batch_size} ; TYPE: {str(type(batch_size))}')
+            print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] PREDICTOR:\n{predictor} ; TYPE: {str(type(predictor))}')
+            print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] COLLECT_PREDICTIONS:\n{collect_predictions or collect_overall_stats} ; TYPE: {str(type(collect_predictions or collect_overall_stats))}')
             eval_stats, predictions = predictor.batch_evaluation(
                 dataset,
                 collect_predictions=collect_predictions or collect_overall_stats,
             )
+            print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] EVAL_STATS-0:\n{eval_stats} ; TYPE: {str(type(eval_stats))}')
+            print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] PREDICTIONS:\n{predictions} ; TYPE: {str(type(predictions))}')
 
             # calculate the overall metrics
             if collect_overall_stats:
@@ -1226,6 +1297,8 @@ class LudwigModel:
                 should_create_exp_dir = not (
                     skip_save_unprocessed_output and skip_save_predictions and skip_save_eval_stats
                 )
+                print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] SHOULD_CREATE_EXP_DIR:\n{should_create_exp_dir} ; TYPE: {str(type(should_create_exp_dir))}')
+                print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] OUTPUT_DIRECTORY-0:\n{output_directory} ; TYPE: {str(type(output_directory))}')
                 if should_create_exp_dir:
                     makedirs(output_directory, exist_ok=True)
 
@@ -1239,19 +1312,23 @@ class LudwigModel:
                     backend=self.backend,
                     skip_save_unprocessed_output=skip_save_unprocessed_output or not self.backend.is_coordinator(),
                 )
+                print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] POSTPROC_PREDICTIONS-00:\n{postproc_predictions} ; TYPE: {str(type(postproc_predictions))}')
             else:
                 postproc_predictions = predictions  # = {}
+                print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] POSTPROC_PREDICTIONS-01:\n{postproc_predictions} ; TYPE: {str(type(postproc_predictions))}')
 
             if self.backend.is_coordinator():
                 should_save_predictions = (
                     collect_predictions and postproc_predictions is not None and not skip_save_predictions
                 )
+                print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] SHOULD_SAVE_PREDICTIONS:\n{should_save_predictions} ; TYPE: {str(type(should_save_predictions))}')
                 if should_save_predictions:
                     save_prediction_outputs(
                         postproc_predictions, self.model.output_features, output_directory, self.backend
                     )
 
                 print_evaluation_stats(eval_stats)
+                print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] SKIP_SAVE_EVAL_STATS:\n{skip_save_eval_stats} ; TYPE: {str(type(skip_save_eval_stats))}')
                 if not skip_save_eval_stats:
                     save_evaluation_stats(eval_stats, output_directory)
 
@@ -1259,13 +1336,19 @@ class LudwigModel:
                     logger.info(f"Saved to: {output_directory}")
 
             if collect_predictions:
+                print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] RETURN_TYPE:\n{return_type} ; TYPE: {str(type(return_type))}')
                 postproc_predictions = convert_predictions(
                     postproc_predictions, self.model.output_features, return_type=return_type, backend=self.backend
                 )
+                print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] POSTPROC_PREDICTIONS:\n{postproc_predictions} ; TYPE: {str(type(postproc_predictions))}')
 
+            print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] SELF.CALLBACKS:\n{self.callbacks} ; TYPE: {str(type(self.callbacks))}')
             for callback in self.callbacks:
                 callback.on_evaluation_end()
 
+            print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] EVAL_STATS-1:\n{eval_stats} ; TYPE: {str(type(eval_stats))}')
+            print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] POSTPROC_PREDICTIONS-1:\n{postproc_predictions} ; TYPE: {str(type(postproc_predictions))}')
+            print(f'\n[ALEX_TEST] [LudwigModel.evaluate()] OUTPUT_DIRECTORY-1:\n{output_directory} ; TYPE: {str(type(output_directory))}')
             return eval_stats, postproc_predictions, output_directory
 
     def forecast(
@@ -1464,6 +1547,10 @@ class LudwigModel:
             print_boxed("WARNING")
             logger.warning(HYPEROPT_WARNING)
 
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] GOING_INTO_SELF.TRAIN()_TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] GOING_INTO_SELF.TRAIN()_OUTPUT_DIRECTORY-0:\n{output_directory} ; TYPE: {str(type(output_directory))}')
+        train_stats: TrainingStats  # dictionary containing training statistics
+        preprocessed_data: PreprocessedDataset  # tuple Ludwig Dataset objects of pre-processed training data
         (train_stats, preprocessed_data, output_directory) = self.train(
             dataset=dataset,
             training_set=training_set,
@@ -1484,8 +1571,15 @@ class LudwigModel:
             output_directory=output_directory,
             random_seed=random_seed,
         )
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] COMPLETED_SELF.TRAIN()_TRAIN_STATS-0:\n{train_stats} ; TYPE: {str(type(train_stats))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] COMPLETED_SELF.TRAIN()_PREPROCESSED_DATA-0:\n{preprocessed_data} ; TYPE: {str(type(preprocessed_data))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] COMPLETED_SELF.TRAIN()_OUTPUT_DIRECTORY-1:\n{output_directory} ; TYPE: {str(type(output_directory))}')
 
         (training_set, validation_set, test_set, training_set_metadata) = preprocessed_data
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] TRAINING_SET:\n{training_set} ; TYPE: {str(type(training_set))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] VALIDATION_SET:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] TEST_SET:\n{test_set} ; TYPE: {str(type(test_set))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
 
         eval_set = validation_set
         if eval_split == TRAINING:
@@ -1496,6 +1590,8 @@ class LudwigModel:
             eval_set = test_set
         else:
             logger.warning(f"Eval split {eval_split} not supported. " f"Using validation set instead")
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] EVAL_SPLIT:\n{eval_split} ; TYPE: {str(type(eval_split))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] EVAL_SET:\n{eval_set} ; TYPE: {str(type(eval_set))}')
 
         if eval_set is not None:
             trainer_dict = self.config_obj.trainer.to_dict()
@@ -1503,7 +1599,22 @@ class LudwigModel:
 
             # predict
             try:
-                eval_stats, _, _ = self.evaluate(
+                # TODO: <Alex>ALEX</Alex>
+                # eval_stats, _, _ = self.evaluate(
+                #     eval_set,
+                #     data_format=data_format,
+                #     batch_size=batch_size,
+                #     output_directory=output_directory,
+                #     skip_save_unprocessed_output=skip_save_unprocessed_output,
+                #     skip_save_predictions=skip_save_predictions,
+                #     skip_save_eval_stats=skip_save_eval_stats,
+                #     collect_predictions=not skip_collect_predictions,
+                #     collect_overall_stats=not skip_collect_overall_stats,
+                #     return_type="dict",
+                # )
+                # TODO: <Alex>ALEX</Alex>
+                # TODO: <Alex>ALEX</Alex>
+                eval_stats, abc, xyz = self.evaluate(
                     eval_set,
                     data_format=data_format,
                     batch_size=batch_size,
@@ -1515,6 +1626,10 @@ class LudwigModel:
                     collect_overall_stats=not skip_collect_overall_stats,
                     return_type="dict",
                 )
+                print(f'\n[ALEX_TEST] [LudwigModel.experiment()] EVAL_STATS-0:\n{eval_stats} ; TYPE: {str(type(eval_stats))}')
+                print(f'\n[ALEX_TEST] [LudwigModel.experiment()] ABC:\n{abc} ; TYPE: {str(type(abc))}')
+                print(f'\n[ALEX_TEST] [LudwigModel.experiment()] XYZ:\n{xyz} ; TYPE: {str(type(xyz))}')
+                # TODO: <Alex>ALEX</Alex>
             except NotImplementedError:
                 logger.warning(
                     "Skipping evaluation as the necessary methods are not "
@@ -1526,6 +1641,10 @@ class LudwigModel:
             logger.warning(f"The evaluation set {eval_set} was not provided. " f"Skipping evaluation")
             eval_stats = None
 
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] EVAL_STATS-1:\n{eval_stats} ; TYPE: {str(type(eval_stats))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] TRAIN_STATS-1:\n{train_stats} ; TYPE: {str(type(train_stats))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] PREPROCESSED_DATA-1:\n{preprocessed_data} ; TYPE: {str(type(preprocessed_data))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.experiment()] OUTPUT_DIRECTORY-2:\n{output_directory} ; TYPE: {str(type(output_directory))}')
         return eval_stats, train_stats, preprocessed_data, output_directory
 
     def collect_weights(self, tensor_names: List[str] = None, **kwargs) -> list:
@@ -1597,6 +1716,7 @@ class LudwigModel:
 
             return activations
 
+    # TODO: <Alex>ALEX -- What about the possible "Dataset" type for training_set, validation_set, and test_set?</Alex>
     def preprocess(
         self,
         dataset: Optional[Union[str, dict, pd.DataFrame]] = None,
@@ -1623,6 +1743,7 @@ class LudwigModel:
                 source containing validation data.
             :param test_set: (Union[str, dict, pandas.DataFrame], default: `None`)
                 source containing test data.
+            # TODO: <Alex>ALEX -- This explanation/docstring of "training_set_metadata" is not clear -- it must be improved.</Alex>
             :param training_set_metadata: (Union[str, dict], default: `None`)
                 metadata JSON file or loaded metadata. Intermediate preprocessed
             structure containing the mappings of the input
@@ -1637,6 +1758,7 @@ class LudwigModel:
                 `'json'`, `'jsonl'`, `'parquet'`,
                 `'pickle'` (pickled Pandas DataFrame),
                 `'sas'`, `'spss'`, `'stata'`, `'tsv'`.
+            # TODO: <Alex>ALEX -- This is wrong: default is "True".</Alex>
             :param skip_save_processed_input: (bool, default: `False`) if input
                 dataset is provided it is preprocessed and cached by saving an HDF5
                 and JSON files to avoid running the preprocessing again. If this
@@ -1659,10 +1781,21 @@ class LudwigModel:
             callback.on_preprocess_start(self.config_obj.to_dict())
 
         preprocessing_params = get_preprocessing_params(self.config_obj)
+        print(f'\n[ALEX_TEST] [LudwigModel.preprocess()] PREPROCESSING_STARTS_FOR_PREPROCESSING_PARAMS:\n{preprocessing_params} ; TYPE: {str(type(preprocessing_params))}')
+        print(f'\n[ALEX_TEST] [LudwigModel.preprocess()] PREPROCESSING_STARTS_FOR_TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
 
-        proc_training_set = proc_validation_set = proc_test_set = None
+        # TODO: <Alex>ALEX -- What are type hints for these three sets?</Alex>
+        # TODO: <Alex>ALEX</Alex>
+        # proc_training_set = proc_validation_set = proc_test_set = None
+        # TODO: <Alex>ALEX</Alex>
+        # TODO: <Alex>ALEX</Alex>
+        proc_training_set = None
+        proc_validation_set = None
+        proc_test_set = None
+        # TODO: <Alex>ALEX</Alex>
         try:
             with provision_preprocessing_workers(self.backend):
+                print(f'\n[ALEX_TEST] [LudwigModel.preprocess()] OBTAINED_WITH_PROVISION_PREPROCESSING_WORKERS()-SELF.BACKEND-CALLING_PREPROCESS_FOR_TRAINING:\n{self.backend} ; TYPE: {str(type(self.backend))}')
                 # TODO (Connor): Refactor to use self.config_obj
                 preprocessed_data = preprocess_for_training(
                     self.config_obj.to_dict(),
@@ -1678,10 +1811,23 @@ class LudwigModel:
                     random_seed=random_seed,
                     callbacks=self.callbacks,
                 )
+                print(f'\n[ALEX_TEST] [LudwigModel.preprocess()] OBTAINED_WITH_PROVISION_PREPROCESSING_WORKERS()-FINISHED_PREPROCESS_FOR_TRAINING-GOT-PREPROCESSED_DATA:\n{preprocessed_data} ; TYPE: {str(type(preprocessed_data))}')
 
+            # TODO: <Alex>ALEX -- This appears to be wrong: the next two lines (unpacking and return) must be inside the "with" clause.</Alex>
             (proc_training_set, proc_validation_set, proc_test_set, training_set_metadata) = preprocessed_data
+            print(f'\n[ALEX_TEST] [LudwigModel.preprocess()] OBTAINED_WITH_PROVISION_PREPROCESSING_WORKERS()-FINISHED_PREPROCESS_FOR_TRAINING-GOT-PROC_TRAINING_SET:\n{proc_training_set} ; TYPE: {str(type(proc_training_set))}')
+            print(f'\n[ALEX_TEST] [LudwigModel.preprocess()] OBTAINED_WITH_PROVISION_PREPROCESSING_WORKERS()-FINISHED_PREPROCESS_FOR_TRAINING-GOT-PROC_VALIDATION_SET:\n{proc_validation_set} ; TYPE: {str(type(proc_validation_set))}')
+            print(f'\n[ALEX_TEST] [LudwigModel.preprocess()] OBTAINED_WITH_PROVISION_PREPROCESSING_WORKERS()-FINISHED_PREPROCESS_FOR_TRAINING-GOT-PROC_TEST_SET:\n{proc_test_set} ; TYPE: {str(type(proc_test_set))}')
+            print(f'\n[ALEX_TEST] [LudwigModel.preprocess()] OBTAINED_WITH_PROVISION_PREPROCESSING_WORKERS()-FINISHED_PREPROCESS_FOR_TRAINING-GOT-TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
 
-            return PreprocessedDataset(proc_training_set, proc_validation_set, proc_test_set, training_set_metadata)
+            # TODO: <Alex>ALEX</Alex>
+            # return PreprocessedDataset(proc_training_set, proc_validation_set, proc_test_set, training_set_metadata)
+            # TODO: <Alex>ALEX</Alex>
+            # TODO: <Alex>ALEX</Alex>
+            a = PreprocessedDataset(training_set=proc_training_set, validation_set=proc_validation_set, test_set=proc_test_set, training_set_metadata=training_set_metadata)
+            print(f'\n[ALEX_TEST] [LudwigModel.preprocess()] OBTAINED_WITH_PROVISION_PREPROCESSING_WORKERS()-FINISHED_PREPROCESS_FOR_TRAINING-GOT-PREPROCESSED-DATASET:\n{a} ; TYPE: {str(type(a))}')
+            return a
+            # TODO: <Alex>ALEX</Alex>
         except Exception as e:
             raise RuntimeError(f"Caught exception during model preprocessing: {str(e)}") from e
         finally:
@@ -1991,7 +2137,16 @@ class LudwigModel:
         if isinstance(config_obj, dict):
             config_obj = ModelConfig.from_dict(config_obj)
         model_type = get_from_registry(config_obj.model_type, model_type_registry)
-        return model_type(config_obj, random_seed=random_seed)
+        print(f'\n[ALEX_TEST] [LudwigModel.create_model()] MODEL_TYPE:\n{model_type} ; TYPE: {str(type(model_type))}')
+        # print(f'\n[ALEX_TEST] [LudwigModel.create_model()] CONFIG_OBJ:\n{config_obj} ; TYPE: {str(type(config_obj))}')
+        # TODO: <Alex>ALEX</Alex>
+        # return model_type(config_obj, random_seed=random_seed)
+        # TODO: <Alex>ALEX</Alex>
+        # TODO: <Alex>ALEX</Alex>
+        a = model_type(config_obj, random_seed=random_seed)
+        print(f'\n[ALEX_TEST] [LudwigModel.create_model()] MODEL:\n{a} ; TYPE: {str(type(a))}')
+        return a
+        # TODO: <Alex>ALEX</Alex>
 
     @staticmethod
     def set_logging_level(logging_level: int) -> None:
@@ -2287,6 +2442,7 @@ def _get_compute_description(backend) -> Dict:
 
 
 @PublicAPI
+# TODO: <Alex>ALEX - Add docstring and type hints.</Alex>
 def get_experiment_description(
     config,
     dataset=None,

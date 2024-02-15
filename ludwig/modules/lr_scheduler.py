@@ -49,6 +49,7 @@ class ReduceLROnPLateauCappedDecreases(ReduceLROnPlateau):
                     logger.info(f"From ReduceLROnPLateauCappedDecreases, reducing learning rate to {new_lr}")
 
 
+# TODO: <Alex>ALEX -- Add docstrings</Alex>
 class LRScheduler:
     def __init__(
         self,
@@ -147,6 +148,7 @@ class StepInfo:
                 "provided. The larger of the two (as a function of the total training steps) will be used."
             )
 
+        # TODO: <Alex>ALEX -- this looks potentially problematic -- can both "if" conditions be True?</Alex>
         num_warmup_steps = 0
         if self.config.warmup_fraction > 0:
             num_warmup_steps = max(self.config.warmup_fraction * self.num_training_steps, num_warmup_steps)
@@ -182,6 +184,8 @@ def get_schedule_with_warmup_and_decay(
 
     # Return a SequentialLR that applies the warmup and decay schedulers in order
     # with the warmup scheduler only applied for the first num_warmup_steps steps.
+    print(f'\n[ALEX_TEST] [MODULES::LR_SCHEDULER.get_schedule_with_warmup_and_decay()] SCHEDULERS:\n{schedulers} ; TYPE: {str(type(schedulers))}')
+    print(f'\n[ALEX_TEST] [MODULES::LR_SCHEDULER.get_schedule_with_warmup_and_decay()] MILESTONES:\n{[step_info.num_warmup_steps]} ; TYPE: {str(type([step_info.num_warmup_steps]))}')
     return SequentialLR(optimizer, schedulers=schedulers, milestones=[step_info.num_warmup_steps])
 
 

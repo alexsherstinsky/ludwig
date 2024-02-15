@@ -25,6 +25,7 @@ class ECD(BaseModel):
     def type() -> str:
         return MODEL_ECD
 
+    # TODO: <Alex>ALEX -- Why is "KWAGRS" appearing as "_KWARGS"?</Alex>
     def __init__(
         self,
         config_obj: ECDModelConfig,
@@ -56,6 +57,7 @@ class ECD(BaseModel):
         # After constructing all layers, clear the cache to free up memory
         clear_data_cache()
 
+    # TODO: <Alex>ALEX -- This type hinting is incorrect/inefficient</Alex>
     def encode(
         self,
         inputs: Union[

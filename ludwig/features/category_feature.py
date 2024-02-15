@@ -144,6 +144,7 @@ class CategoryFeatureMixin(BaseFeatureMixin):
     def cast_column(column, backend):
         return column.astype(str)
 
+    # TODO: <Alex>ALEX -- Looks like "config" is not used.</Alex>
     @staticmethod
     def get_feature_meta(
         config: ModelConfigDict,
@@ -152,12 +153,20 @@ class CategoryFeatureMixin(BaseFeatureMixin):
         backend,
         is_input_feature: bool,
     ) -> FeatureMetadataDict:
+        print(f'\n[ALEX_TEST] [CategoryFeatureMixin.get_feature_meta()] COLUMN:\n{column} ; TYPE: {str(type(column))} ; IS_INPUT_FEATURE={is_input_feature}')
+        print(f'\n[ALEX_TEST] [CategoryFeatureMixin.get_feature_meta()] PREPROCESSING_PARAMETERS:\n{preprocessing_parameters} ; TYPE: {str(type(preprocessing_parameters))}')
+        print(f'\n[ALEX_TEST] [CategoryFeatureMixin.get_feature_meta()] BACKEND:\n{backend} ; TYPE: {str(type(backend))}')
+        # TODO: <Alex>ALEX -- Since presence of "vocab" key replaces all three metadata items, this should be accomplished using "if/else" pattern.</Alex>
         idx2str, str2idx, str2freq = create_vocabulary_single_token(
             column,
             num_most_frequent=preprocessing_parameters["most_common"],
             processor=backend.df_engine,
         )
+        print(f'\n[ALEX_TEST] [CategoryFeatureMixin.get_feature_meta()] IDX2STR:\n{idx2str} ; TYPE: {str(type(idx2str))}')
+        print(f'\n[ALEX_TEST] [CategoryFeatureMixin.get_feature_meta()] STR2IDX:\n{str2idx} ; TYPE: {str(type(str2idx))}')
+        print(f'\n[ALEX_TEST] [CategoryFeatureMixin.get_feature_meta()] STR2FREQ:\n{str2freq} ; TYPE: {str(type(str2freq))}')
 
+        # TODO: <Alex>ALEX -- This could be accomplished using one condition and ".get()" statement.</Alex>
         if "vocab" in preprocessing_parameters and preprocessing_parameters["vocab"]:  # Check that vocab is non-empty
             # If vocab was explciitly provided, override the inferred vocab
             idx2str = preprocessing_parameters["vocab"]
@@ -173,6 +182,7 @@ class CategoryFeatureMixin(BaseFeatureMixin):
                 str2freq[preprocessing_parameters["fallback_label"]] = 0
 
         vocab_size = len(str2idx)
+        print(f'\n[ALEX_TEST] [CategoryFeatureMixin.get_feature_meta()] VOCAB_SIZE:\n{vocab_size} ; TYPE: {str(type(vocab_size))}')
         if not is_input_feature and vocab_size <= 1:
             # Category output feature with vocab size 1
             raise InputDataError(
@@ -183,6 +193,7 @@ class CategoryFeatureMixin(BaseFeatureMixin):
                 only contains {str(idx2str)}.
                 """,
             )
+        # TODO: <Alex>ALEX -- Seems like in this case could also be vocab_size of 0.</Alex>
         if vocab_size <= 1:
             # Category input feature with vocab size 1
             logger.info(
@@ -192,6 +203,7 @@ class CategoryFeatureMixin(BaseFeatureMixin):
             )
         return {"idx2str": idx2str, "str2idx": str2idx, "str2freq": str2freq, "vocab_size": vocab_size}
 
+    # TODO: <Alex>ALEX -- This method can be made more compact and more efficient by utilizing "__replace_token_with_idx()" uniformly throughout.</Alex>
     @staticmethod
     def feature_data(backend, column, metadata):
         def __replace_token_with_idx(value: Any, metadata: TrainingSetMetadataDict, fallback_symbol_idx: int) -> int:
@@ -212,6 +224,7 @@ class CategoryFeatureMixin(BaseFeatureMixin):
             )
             return fallback_symbol_idx
 
+        # TODO: <Alex>ALEX -- if/else is not needed, because all clauses return.</Alex>
         # No unknown symbol in Metadata from preprocessing means that all values
         # should be mappable to vocabulary
         if UNKNOWN_SYMBOL not in metadata["str2idx"]:
@@ -234,6 +247,7 @@ class CategoryFeatureMixin(BaseFeatureMixin):
                 meta=(column.name, int),
             ).astype(int_type(metadata["vocab_size"]))
 
+    # TODO: <Alex>ALEX -- Types are missing/wrong (proc_df is not a DataFrame, but a dictionary).  Check carefully.</Alex>
     @staticmethod
     def add_feature_data(
         feature_config,
@@ -311,8 +325,10 @@ class CategoryInputFeature(CategoryFeatureMixin, InputFeature):
 
     @staticmethod
     def update_config_with_metadata(feature_config, feature_metadata, *args, **kwargs):
+        print(f'\n[ALEX_TEST] [CategoryInputFeature.update_config_with_metadata()] FEATURE_METADATA_FOR_FEATURE[{feature_config.name}]:\n{feature_metadata} ; TYPE: {str(type(feature_metadata))}')
         feature_config.encoder.vocab = feature_metadata["idx2str"]
         feature_config.encoder.skip = feature_metadata[PREPROCESSING].get("cache_encoder_embeddings", False)
+        print(f'\n[ALEX_TEST] [CategoryInputFeature.update_config_with_metadata()] UPDATED_ENCODER_FOR_FEATURE[{feature_config.name}]:\n{feature_config.encoder} ; TYPE: {str(type(feature_config.encoder))}')
 
     @staticmethod
     def get_schema_cls():
@@ -387,6 +403,7 @@ class CategoryOutputFeature(CategoryFeatureMixin, OutputFeature):
 
     @staticmethod
     def update_config_with_metadata(feature_config, feature_metadata, *args, **kwargs):
+        print(f'\n[ALEX_TEST] [CategoryOutputFeature.update_config_with_metadata()] FEATURE_METADATA_FOR_FEATURE[{feature_config.name}]:\n{feature_metadata} ; TYPE: {str(type(feature_metadata))}')
         feature_config.num_classes = feature_metadata["vocab_size"]
         feature_config.top_k = min(feature_config.num_classes, feature_config.top_k)
 
@@ -477,6 +494,7 @@ class CategoryOutputFeature(CategoryFeatureMixin, OutputFeature):
                     "but no class_similarities are provided "
                     "for feature {}".format(feature_config.column)
                 )
+        print(f'\n[ALEX_TEST] [CategoryOutputFeature.update_config_with_metadata()] ENRICHED_FEATURE_CONFIG_FOR_FEATURE[{feature_config.name}]:\n{feature_config} ; TYPE: {str(type(feature_config))}')
 
     @staticmethod
     def calculate_overall_stats(predictions, targets, train_set_metadata):

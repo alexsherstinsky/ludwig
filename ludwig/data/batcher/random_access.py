@@ -24,13 +24,16 @@ from ludwig.data.batcher.base import Batcher
 logger = logging.getLogger(__name__)
 
 
+# TODO: <Alex>ALEX -- Add type hints all around.</Alex>
 @DeveloperAPI
 class RandomAccessBatcher(Batcher):
     def __init__(self, dataset, sampler, batch_size=128, ignore_last=False, augmentation_pipeline=None):
         # store our dataset as well
         self.dataset = dataset
         self.sampler = sampler
+        print(f'\n[ALEX_TEST] [RandomAccessBatcher.__INIT__()] SELF.SAMPLER:\n{self.sampler} ; TYPE: {str(type(self.sampler))}')
         self.sample_it = iter(self.sampler)
+        print(f'\n[ALEX_TEST] [RandomAccessBatcher.__INIT__()] SELF.SAMPLE_IT:\n{self.sample_it} ; TYPE: {str(type(self.sample_it))}')
 
         self.ignore_last = ignore_last
         self.batch_size = batch_size
@@ -45,14 +48,24 @@ class RandomAccessBatcher(Batcher):
             raise StopIteration()
 
         indices = []
+        print(f'\n[ALEX_TEST] [RandomAccessBatcher.next_batch()] SELF.BATCH_SIZE:\n{self.batch_size} ; TYPE: {str(type(self.batch_size))}')
         for _ in range(self.batch_size):
             try:
-                indices.append(next(self.sample_it))
+                # TODO: <Alex>ALEX</Alex>
+                # indices.append(next(self.sample_it))
+                # TODO: <Alex>ALEX</Alex>
+                # TODO: <Alex>ALEX</Alex>
+                a = next(self.sample_it)
+                # print(f'\n[ALEX_TEST] [RandomAccessBatcher.next_batch()] NEXT(SELF.SAMPLE_IT):\n{a} ; TYPE: {str(type(a))}')
+                indices.append(a)
+                # TODO: <Alex>ALEX</Alex>
                 self.index += 1
             except StopIteration:
                 break
+        # print(f'\n[ALEX_TEST] [RandomAccessBatcher.next_batch()] INDICES:\n{indices} ; TYPE: {str(type(indices))}')
 
         sub_batch = {feature_name: self.dataset.get(feature_name, indices) for feature_name in self.dataset.features}
+        # print(f'\n[ALEX_TEST] [RandomAccessBatcher.next_batch()] SUB_BATCH:\n{sub_batch} ; TYPE: {str(type(sub_batch))}')
 
         if self.augmentation_pipeline:
             for feature_name, augmentations in self.augmentation_pipeline.items():

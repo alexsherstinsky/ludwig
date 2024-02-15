@@ -134,8 +134,10 @@ def get_output_directory(output_directory, experiment_name, model_name="run"):
 @DeveloperAPI
 def get_file_names(output_directory):
     description_fn = os.path.join(output_directory, DESCRIPTION_FILE_NAME)
+    # TODO: <Alex>ALEX - Put a global file name for "training_statistics.json"</Alex>
     training_stats_fn = os.path.join(output_directory, "training_statistics.json")
 
+    # TODO: <Alex>ALEX - Put a global file name for "model"</Alex>
     model_dir = os.path.join(output_directory, "model")
 
     return description_fn, training_stats_fn, model_dir

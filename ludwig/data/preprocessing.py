@@ -229,6 +229,7 @@ class DictPreprocessor(DataFormatPreprocessor):
         return dataset, training_set_metadata, None
 
 
+# TODO: <Alex>ALEX -- Put type hints on all methods</Alex>
 class DataFramePreprocessor(DataFormatPreprocessor):
     @staticmethod
     def preprocess_for_training(
@@ -245,12 +246,18 @@ class DataFramePreprocessor(DataFormatPreprocessor):
         random_seed=default_random_seed,
         callbacks=None,
     ):
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::DataFramePreprocessor.preprocess_for_training()] FEATURES:\n{features} ; TYPE: {str(type(features))}')
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::DataFramePreprocessor.preprocess_for_training()] TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::DataFramePreprocessor.preprocess_for_training()] PREPROCESSING_PARAMS:\n{preprocessing_params} ; TYPE: {str(type(preprocessing_params))}')
         num_overrides = override_in_memory_flag(features, True)
         if num_overrides > 0:
             logger.warning("Using in_memory = False is not supported " "with {} data format.".format("dataframe"))
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::DataFramePreprocessor.preprocess_for_training()] NUM_IN_MEMORY_OVERRIDES:\n{num_overrides} ; TYPE: {str(type(num_overrides))}')
 
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::DataFramePreprocessor.preprocess_for_training()] DATASET-0:\n{dataset} ; TYPE: {str(type(dataset))}')
         if isinstance(dataset, pd.DataFrame):
             dataset = backend.df_engine.from_pandas(dataset)
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::DataFramePreprocessor.preprocess_for_training()] DATASET-1:\n{dataset} ; TYPE: {str(type(dataset))}')
 
         return _preprocess_df_for_training(
             config,
@@ -1142,6 +1149,8 @@ data_format_preprocessor_registry = {
 }
 
 
+# TODO: <Alex>ALEX -- Put type hints on all methods.  Also, refactor this function -- it is very long and complex.</Alex>
+# TODO: <Alex>ALEX -- The naming "global_preprocessing_parameters" is bad, because it is destination variable for merging/reconciling default training/prediction preprocessing parameters (it is not really global -- it is custom).</Alex>
 def build_dataset(
     config,
     dataset_df,
@@ -1173,7 +1182,17 @@ def build_dataset(
     """
 
     df_engine = backend.df_engine
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] MODE:\n{mode} ; TYPE: {str(type(mode))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] METADATA-0:\n{metadata} ; TYPE: {str(type(metadata))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] FEATURES:\n{features} ; TYPE: {str(type(features))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] GLOBAL_PREPROCESSING_PARAMETERS-0:\n{global_preprocessing_parameters} ; TYPE: {str(type(global_preprocessing_parameters))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_DF-0:\n{dataset_df} ; TYPE: {str(type(dataset_df))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DF_ENGINE:\n{df_engine} ; TYPE: {str(type(df_engine))}')
 
+    # TODO: <Alex>ALEX</Alex>
+    a = df_engine.partitioned
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DF_ENGINE.PARTITIONED:\n{a} ; TYPE: {str(type(a))}')
+    # TODO: <Alex>ALEX</Alex>
     if df_engine.partitioned:
         if any(f["type"] in REPARTITIONING_FEATURE_TYPES for f in features) and dataset_df.npartitions > 1:
             # A globally unique index only matters if you know that there will be a repartition downstream for some
@@ -1193,21 +1212,29 @@ def build_dataset(
                 f"Resetting index to ensure globally unique indices."
             )
             dataset_df = df_engine.reset_index(dataset_df)
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_DF-1:\n{dataset_df} ; TYPE: {str(type(dataset_df))}')
 
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_DF-2:\n{dataset_df} ; TYPE: {str(type(dataset_df))}')
     dataset_df = df_engine.parallelize(dataset_df)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_DF-3:\n{dataset_df} ; TYPE: {str(type(dataset_df))}')
 
     # Ensure that column names with non-word characters won't cause problems for downstream operations.
     # NOTE: Must be kept consistent with config sanitization in schema/model_types/base.py.
     dataset_df = sanitize_column_names(dataset_df)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_DF-4:\n{dataset_df} ; TYPE: {str(type(dataset_df))}')
 
     if mode == "training":
         sample_ratio = global_preprocessing_parameters["sample_ratio"]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] SAMPLE_RATIO:\n{sample_ratio} ; TYPE: {str(type(sample_ratio))}')
         sample_size = global_preprocessing_parameters["sample_size"]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] SAMPLE_SIZE:\n{sample_size} ; TYPE: {str(type(sample_size))}')
         dataset_df = _get_sampled_dataset_df(dataset_df, df_engine, sample_ratio, sample_size, random_seed)
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_DF-5:\n{dataset_df} ; TYPE: {str(type(dataset_df))}')
 
     # If persisting DataFrames in memory is enabled, we want to do this after
     # each batch of parallel ops in order to avoid redundant computation
     dataset_df = df_engine.persist(dataset_df)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_DF-6:\n{dataset_df} ; TYPE: {str(type(dataset_df))}')
 
     if mode == "training":
         default_preprocessing_parameters = default_training_preprocessing_parameters
@@ -1215,8 +1242,12 @@ def build_dataset(
         default_preprocessing_parameters = default_prediction_preprocessing_parameters
     else:
         raise ValueError(f"Invalid mode {mode}")
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DEFAULT_PREPROCESSING_PARAMETERS:\n{default_preprocessing_parameters} ; TYPE: {str(type(default_preprocessing_parameters))}')
     global_preprocessing_parameters = merge_dict(default_preprocessing_parameters, global_preprocessing_parameters)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] GLOBAL_PREPROCESSING_PARAMETERS-1:\n{global_preprocessing_parameters} ; TYPE: {str(type(global_preprocessing_parameters))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] GLOBAL_PREPROCESSING_PARAMETERS-1["SPLIT"]["TYPE"]:\n{global_preprocessing_parameters["split"]["type"]} ; TYPE: {str(type(global_preprocessing_parameters["split"]["type"]))}')
 
+    # TODO: <Alex>ALEX -- compress the below into one "if" statement -- do not need two of them.</Alex>
     split_col = None
     if global_preprocessing_parameters["split"]["type"] == "fixed":
         if global_preprocessing_parameters["split"]["column"] in dataset_df.columns:
@@ -1227,32 +1258,46 @@ def build_dataset(
                 f"split strategy was not found in dataset."
             )
 
+    # TODO: <Alex>ALEX -- [LEAKY_ABSTRACTION] Prompts apply only to LLMs; there must be a better/cleaner place for this filtering.</Alex>
     # update input features with prompt configs during preprocessing (as opposed to during the model forward pass)
     # so that we can compute metadata and build the dataset correctly.
     logger.debug("handle text features with prompt parameters")
     synthesized_dataset_cols = handle_features_with_prompt_config(
         config, dataset_df, features, split_col=split_col, backend=backend
     )
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] SYNTHESIZED_DATASET_COLS:\n{synthesized_dataset_cols} ; TYPE: {str(type(synthesized_dataset_cols))}')
 
     # Get all the unique preprocessing features to compute
+    # TODO: <Alex>ALEX -- Could this be accomplished more elegantly with set operations and unique __hash__ ID for the "feature" class?</Alex>
     feature_configs = []
     feature_hashes = set()
     for feature in features:
         if feature[PROC_COLUMN] not in feature_hashes:
             feature_configs.append(feature)
             feature_hashes.add(feature[PROC_COLUMN])
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] FEATURE_CONFIGS:\n{feature_configs} ; TYPE: {str(type(feature_configs))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] FEATURE_HASHES:\n{feature_hashes} ; TYPE: {str(type(feature_hashes))}')
 
+    # TODO: <Alex>ALEX -- This could be done more cleanly through comprehension.</Alex>
     dataset_cols = {}
     for feature_config in feature_configs:
         col_name = feature_config[COLUMN]
         dataset_cols[col_name] = (
             synthesized_dataset_cols[col_name] if col_name in synthesized_dataset_cols else dataset_df[col_name]
         )
+    # TODO: <Alex>ALEX -- confirm that each value of "dataset_cols" is of type "pandas.Series".</Alex>
+    # TODO: <Alex>ALEX</Alex>
+    # breakpoint()
+    # TODO: <Alex>ALEX</Alex>
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_COLS-0:\n{dataset_cols} ; TYPE: {str(type(dataset_cols))}')
 
+    # TODO: <Alex>ALEX -- This code should be moved to right above where it is first used.</Alex>
     logger.debug("build preprocessing parameters")
+    # TODO: <Alex>ALEX -- Note: The "global_preprocessing_parameters" -- is not used a lot.</Alex>
     feature_name_to_preprocessing_parameters = build_preprocessing_parameters(
         dataset_cols, feature_configs, global_preprocessing_parameters, backend, metadata=metadata
     )
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] FEATURE_NAME_TO_PREPROCESSING_PARAMETERS:\n{feature_name_to_preprocessing_parameters} ; TYPE: {str(type(feature_name_to_preprocessing_parameters))}')
 
     # Happens after preprocessing parameters are built, so we can use precomputed fill values.
     logger.debug("handle missing values")
@@ -1265,6 +1310,11 @@ def build_dataset(
     # values, we work around the above issue by temporarily treating all columns as object dtype.
     for col_key in dataset_cols:
         dataset_cols[col_key] = dataset_cols[col_key].astype(object)
+    # TODO: <Alex>ALEX -- confirm that each value of "dataset_cols" is of type "pandas.Series".</Alex>
+    # TODO: <Alex>ALEX</Alex>
+    # breakpoint()
+    # TODO: <Alex>ALEX</Alex>
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_COLS-1:\n{dataset_cols} ; TYPE: {str(type(dataset_cols))}')
 
     for feature_config in feature_configs:
         preprocessing_parameters = feature_name_to_preprocessing_parameters[feature_config[NAME]]
@@ -1273,6 +1323,11 @@ def build_dataset(
     # Happens after missing values are handled to avoid NaN casting issues.
     logger.debug("cast columns")
     cast_columns(dataset_cols, feature_configs, backend)
+    # TODO: <Alex>ALEX -- confirm that each value of "dataset_cols" is of type "pandas.Series".</Alex>
+    # TODO: <Alex>ALEX</Alex>
+    # breakpoint()
+    # TODO: <Alex>ALEX</Alex>
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET_COLS-2:\n{dataset_cols} ; TYPE: {str(type(dataset_cols))}')
 
     for callback in callbacks or []:
         callback.on_build_metadata_start(dataset_df, mode)
@@ -1281,7 +1336,9 @@ def build_dataset(
     metadata: TrainingSetMetadataDict = build_metadata(
         config, metadata, feature_name_to_preprocessing_parameters, dataset_cols, feature_configs, backend
     )
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] METADATA-1:\n{metadata} ; TYPE: {str(type(metadata))}')
 
+    # TODO: <Alex>ALEX -- [LEAKY_ABSTRACTION] Prompts apply only to LLMs; there must be a better/cleaner place for this check.</Alex>
     check_global_max_sequence_length_fits_prompt_template(metadata, global_preprocessing_parameters)
 
     for callback in callbacks or []:
@@ -1292,20 +1349,26 @@ def build_dataset(
 
     logger.debug("build data")
     proc_cols = build_data(dataset_cols, feature_configs, metadata, backend, skip_save_processed_input)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] PROC_COLS:\n{proc_cols} ; TYPE: {str(type(proc_cols))}')
 
     for callback in callbacks or []:
         callback.on_build_data_end(dataset_df, mode)
 
+    # TODO: <Alex>ALEX -- [LEAKY_ABSTRACTION] This seems unclean to lookup splitter for error checking and later for splitting; maybe it can be cleaned up.</Alex>
     # Get any additional columns needed for splitting downstream, otherwise they will not be
     # included in the preprocessed output.
     split_params = global_preprocessing_parameters.get(SPLIT, {})
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] SPLIT_PARAMS:\n{split_params} ; TYPE: {str(type(split_params))}')
     if "type" not in split_params and SPLIT in dataset_df:
         warnings.warn(
             'Detected "split" column in the data, but using default split type '
             '"random". Did you mean to set split type to "fixed"?'
         )
 
+    # TODO: <Alex>ALEX -- [LEAKY_ABSTRACTION] Again: This seems unclean to lookup splitter for error checking and later for splitting; maybe it can be cleaned up.</Alex>
     splitter = get_splitter(**split_params)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] SPLITTER:\n{splitter} ; TYPE: {str(type(splitter))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] SPLITTER.REQUIRED_COLUMNS:\n{splitter.required_columns} ; TYPE: {str(type(splitter.required_columns))}')
     for column in splitter.required_columns:
         if column not in dataset_df:
             warnings.warn(
@@ -1329,14 +1392,17 @@ def build_dataset(
             if reshape is not None:
                 proc_cols[proc_column] = backend.df_engine.map_objects(proc_cols[proc_column], lambda x: x.reshape(-1))
 
+    # TODO: <Alex>ALEX -- This comment is inaccurate for Pandas</Alex>
     # Implements an outer join of proc_cols
     dataset = backend.df_engine.df_like(dataset_df, proc_cols)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET-0:\n{dataset} ; TYPE: {str(type(dataset))}')
 
     # At this point, there should be no missing values left in the dataframe, unless
     # the DROP_ROW preprocessing option was selected, in which case we need to drop those
     # rows.
     len_dataset_before_drop_rows = len(dataset)
     dataset = dataset.dropna()
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET-1:\n{dataset} ; TYPE: {str(type(dataset))}')
     len_dataset_after_drop_rows = len(dataset)
 
     if len_dataset_before_drop_rows != len_dataset_after_drop_rows:
@@ -1353,15 +1419,19 @@ def build_dataset(
             continue
         col_name_to_dtype[col_name] = col.dtype
     dataset = dataset.astype(col_name_to_dtype)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET-2:\n{dataset} ; TYPE: {str(type(dataset))}')
 
     # Persist the completed dataset with no NaNs
     dataset = backend.df_engine.persist(dataset)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET-3:\n{dataset} ; TYPE: {str(type(dataset))}')
 
     # Remove partitions that are empty after removing NaNs
     dataset = backend.df_engine.remove_empty_partitions(dataset)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET-4:\n{dataset} ; TYPE: {str(type(dataset))}')
 
     # Embed features with fixed encoders
     dataset = embed_fixed_features(dataset, feature_configs, metadata, backend)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_dataset()] DATASET-5:\n{dataset} ; TYPE: {str(type(dataset))}')
 
     return dataset, metadata
 
@@ -1372,22 +1442,42 @@ def embed_fixed_features(
     """Transforms every input feature with cacheable encoder embeddings into its encoded form and updates
     metadata."""
     # Encode features in bulk at the end
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] DATASET:\n{dataset} ; TYPE: {str(type(dataset))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] FEATURE_CONFIGS:\n{feature_configs} ; TYPE: {str(type(feature_configs))}')
     features_to_encode = get_features_with_cacheable_fixed_embeddings(feature_configs, metadata)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] FEATURES_TO_ENCODE-0:\n{features_to_encode} ; TYPE: {str(type(features_to_encode))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] METADATA-0:\n{metadata} ; TYPE: {str(type(metadata))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] BACKEND:\n{backend} ; TYPE: {str(type(backend))}')
     if not features_to_encode:
         return dataset
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] FEATURES_TO_ENCODE-1:\n{features_to_encode} ; TYPE: {str(type(features_to_encode))}')
 
     logger.info(f"Cache encoder embeddings for features: {[f[NAME] for f in features_to_encode]}")
     for feature in features_to_encode:
         # Temporarily set to False to ensure proper encoding
         metadata[feature[NAME]][PREPROCESSING]["cache_encoder_embeddings"] = False
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] METADATA-1:\n{metadata} ; TYPE: {str(type(metadata))}')
 
-    batch_size = backend.tune_batch_size(create_embed_batch_size_evaluator(features_to_encode, metadata), len(dataset))
+    # TODO: <Alex>ALEX</Alex>
+    # batch_size = backend.tune_batch_size(create_embed_batch_size_evaluator(features_to_encode, metadata), len(dataset))
+    # TODO: <Alex>ALEX</Alex>
+    # TODO: <Alex>ALEX</Alex>
+    a = create_embed_batch_size_evaluator(features_to_encode, metadata)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] EMBED_BATCH_SIZE_EVALUATOR:\n{a} ; TYPE: {str(type(a))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] LEN(DATASET):\n{len(dataset)} ; TYPE: {str(type(len(dataset)))}')
+    batch_size = backend.tune_batch_size(a, len(dataset))
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] BATCH_SIZE:\n{batch_size} ; TYPE: {str(type(batch_size))}')
+    # TODO: <Alex>ALEX</Alex>
+    # TODO: <Alex>ALEX -- This could be moved up.</Alex>
     transform_fn = create_embed_transform_fn(features_to_encode, metadata)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] TRANSFORM_FN:\n{transform_fn} ; TYPE: {str(type(transform_fn))}')
     results = backend.batch_transform(dataset, batch_size, transform_fn, name="Caching encoder embeddings")
 
     for feature in features_to_encode:
         # Set metadata so we know to skip encoding the feature
         metadata[feature[NAME]][PREPROCESSING]["cache_encoder_embeddings"] = True
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] METADATA-2:\n{metadata} ; TYPE: {str(type(metadata))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::embed_fixed_features()] RESULTS-RETURNED:\n{results} ; TYPE: {str(type(transform_fn))}')
 
     return results
 
@@ -1419,6 +1509,7 @@ def get_features_with_cacheable_fixed_embeddings(
     feature_configs: List[FeatureConfigDict], metadata: TrainingSetMetadataDict
 ) -> List[FeatureConfigDict]:
     """Returns list of features with `cache_encoder_embeddings=True` set in the preprocessing config."""
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::get_features_with_cacheable_fixed_embeddings()] FEATURE_CONFIGS:\n{feature_configs} ; TYPE: {str(type(feature_configs))}')
     features_to_encode = []
     for feature_config in feature_configs:
         # deal with encoders that have fixed preprocessing
@@ -1443,6 +1534,7 @@ def get_features_with_cacheable_fixed_embeddings(
                     # Convert to Ray Datasets, map batches to encode, then convert back to Dask
                     features_to_encode.append(feature_config)
 
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::get_features_with_cacheable_fixed_embeddings()] RETURNING-FEATURES_TO_ENCODE:\n{features_to_encode} ; TYPE: {str(type(features_to_encode))}')
     return features_to_encode
 
 
@@ -1471,6 +1563,8 @@ def merge_preprocessing(
     return merge_dict(global_preprocessing_parameters[feature_config[TYPE]], feature_config[PREPROCESSING])
 
 
+# TODO: <Alex>ALEX -- Add docstrings and modernize type hints.</Alex>
+# TODO: <Alex>ALEX -- "global_preprocessing_parameters" is not used.</Alex>
 def build_preprocessing_parameters(
     dataset_cols: Dict[str, Series],
     feature_configs: List[FeatureConfigDict],
@@ -1495,6 +1589,7 @@ def build_preprocessing_parameters(
         fill_value = precompute_fill_value(
             dataset_cols, feature_config, missing_value_strategy, preprocessing_parameters, backend
         )
+        # TODO: <Alex>ALEX -- the dictionary operations in this code can be simplified.</Alex>
         if fill_value is not None:
             preprocessing_parameters.update({"computed_fill_value": fill_value})
 
@@ -1509,6 +1604,7 @@ def build_preprocessing_parameters(
                 # Use fill value from missing_value_strategy to avoid redundant computation
                 outlier_fill_value = fill_value
 
+            # TODO: <Alex>ALEX -- the dictionary operations in this code can be simplified.</Alex>
             if outlier_fill_value is not None:
                 preprocessing_parameters.update({"computed_outlier_fill_value": outlier_fill_value})
 
@@ -1523,6 +1619,7 @@ def is_input_feature(feature_config: FeatureConfigDict) -> bool:
     return ENCODER in feature_config
 
 
+# TODO: <Alex>ALEX -- Add docstrings and add/improve type hints.</Alex>
 def build_metadata(
     config: ModelConfigDict,
     metadata: TrainingSetMetadataDict,
@@ -1531,23 +1628,52 @@ def build_metadata(
     feature_configs: List[FeatureConfigDict],
     backend: Backend,
 ) -> TrainingSetMetadataDict:
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] METADATA-INITIALLY:\n{metadata} ; TYPE: {str(type(metadata))}')
+    # TODO: <Alex>ALEX -- This can be made more efficient by running "get_base_type_registry()" only once.</Alex>
     for feature_config in feature_configs:
         feature_name = feature_config[NAME]
         if feature_name in metadata:
             continue
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] FEATURE_NAME:\n{feature_name} ; TYPE: {str(type(feature_name))}')
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] FEATURE_TYPE:\n{feature_config[TYPE]} ; TYPE: {str(type(feature_config[TYPE]))}')
 
         preprocessing_parameters = feature_name_to_preprocessing_parameters[feature_name]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] PREPROCESSING_PARAMETERS-FOR_FEATURE_NAME[{feature_name}]:\n{preprocessing_parameters} ; TYPE: {str(type(preprocessing_parameters))}')
 
+        # TODO: <Alex>ALEX</Alex>
+        column_name = feature_config[COLUMN]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] COLUMN_NAME-FOR_FEATURE_NAME[{feature_name}]:\n{column_name} ; TYPE: {str(type(column_name))}')
+        # TODO: <Alex>ALEX</Alex>
         column = dataset_cols[feature_config[COLUMN]]
-        metadata[feature_name] = get_from_registry(feature_config[TYPE], get_base_type_registry()).get_feature_meta(
-            config, column, preprocessing_parameters, backend, is_input_feature(feature_config)
+        # TODO: <Alex>ALEX</Alex>
+        # metadata[feature_name] = get_from_registry(feature_config[TYPE], get_base_type_registry()).get_feature_meta(
+        #     config, column, preprocessing_parameters, backend, is_input_feature(feature_config)
+        # )
+        # TODO: <Alex>ALEX</Alex>
+        # TODO: <Alex>ALEX</Alex>
+        fct = feature_config[TYPE]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] FEATURE_CONFIG_TYPE-FOR_FEATURE_NAME[{feature_name}]:\n{fct} ; TYPE: {str(type(fct))}')
+        br = get_base_type_registry()
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] BASE_REGISTRY-FOR_FEATURE_NAME[{feature_name}]:\n{br} ; TYPE: {str(type(br))}')
+        gfr = get_from_registry(fct, br)
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] GOT_FROM_REGISTRY-FOR_FEATURE_NAME[{feature_name}]:\n{gfr} ; TYPE: {str(type(gfr))}')
+        metadata[feature_name] = gfr.get_feature_meta(
+            config,
+            column,
+            preprocessing_parameters,
+            backend,
+            is_input_feature(feature_config),
         )
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] METADATA-FOR_FEATURE_NAME[{feature_name}]:\n{metadata[feature_name]} ; TYPE: {str(type(metadata[feature_name]))}')
+        # TODO: <Alex>ALEX</Alex>
 
         metadata[feature_name][PREPROCESSING] = preprocessing_parameters
 
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_metadata()] METADATA-RETURNED:\n{metadata} ; TYPE: {str(type(metadata))}')
     return metadata
 
 
+# TODO: <Alex>ALEX -- improve type hints</Alex>
 def build_data(
     input_cols: DataFrame,
     feature_configs: List[Dict],
@@ -1568,21 +1694,68 @@ def build_data(
     Returns:
         Dictionary of (feature name) -> (processed data).
     """
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] INPUT_COLS-STARTING:\n{input_cols} ; TYPE: {str(type(input_cols))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIGS:\n{feature_configs} ; TYPE: {str(type(feature_configs))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
     proc_cols = {}
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] INITIAL-PROC_COLS:\n{proc_cols} ; TYPE: {str(type(proc_cols))}')
+    # TODO: <Alex>ALEX -- This can be made more efficient by running "get_base_type_registry()" only once.</Alex>
     for feature_config in feature_configs:
+        # TODO: <Alex>ALEX</Alex>
+        col_name = feature_config[COLUMN]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-FEATURE_NAME:\n{col_name} ; TYPE: {str(type(col_name))}')
+        # TODO: <Alex>ALEX</Alex>
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-FEATURE_CONFIG[FOR_FEATURE_NAME={col_name}]:\n{feature_config} ; TYPE: {str(type(feature_config))}')
         # TODO(travis): instead of using raw dictionary, this should be loaded into a proper PreprocessingConfig
         #  object, so we don't need to hackily check for the presence of added keys.
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-TRAINING_SET_METADATA[FOR_FEATURE_NAME={col_name}]::\n{training_set_metadata[col_name]} ; TYPE: {str(type(training_set_metadata[col_name]))}')
         preprocessing_parameters = training_set_metadata[feature_config[NAME]][PREPROCESSING]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-PREPROCESSING_PARAMETERS[FOR_FEATURE_NAME={col_name}]::\n{preprocessing_parameters} ; TYPE: {str(type(preprocessing_parameters))}')
+        # TODO: <Alex>ALEX</Alex>
+        # col_name = feature_config[COLUMN]
+        # print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-FEATURE_NAME:\n{col_name} ; TYPE: {str(type(col_name))}')
+        input_col = input_cols[col_name]
+        # print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-INPUT_COL_VALUES:\n{input_col} ; TYPE: {str(type(input_col))}')
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-INPUT_COL_VALUES[INITIALLY][FOR_FEATURE_NAME={col_name}]-0:\n{input_col} ; TYPE: {str(type(input_col))}')
+        # TODO: <Alex>ALEX</Alex>
 
         # Need to run this again here as cast_columns may have introduced new missing values
         handle_missing_values(input_cols, feature_config, preprocessing_parameters, backend)
+        # print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-INPUT_COLS[AFTER_HANDLE_MISSING_VALUES]-1:\n{input_cols} ; TYPE: {str(type(input_cols))}')
+        # TODO: <Alex>ALEX</Alex>
+        input_col = input_cols[col_name]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-INPUT_COL_VALUES[AFTER_HANDLE_MISSING_VALUES][FOR_FEATURE_NAME={col_name}]-1:\n{input_col} ; TYPE: {str(type(input_col))}')
+        # TODO: <Alex>ALEX</Alex>
 
         # For features that support it, we perform outlier removal here using metadata computed on the full dataset
         handle_outliers(
             input_cols, feature_config, preprocessing_parameters, training_set_metadata[feature_config[NAME]], backend
         )
+        # print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-INPUT_COLS[AFTER_HANDLE_OUTLIERS]-2:\n{input_cols} ; TYPE: {str(type(input_cols))}')
+        # TODO: <Alex>ALEX</Alex>
+        input_col = input_cols[col_name]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-INPUT_COL_VALUES[AFTER_HANDLE_OUTLIERS][FOR_FEATURE_NAME={col_name}]-2:\n{input_col} ; TYPE: {str(type(input_col))}')
+        # TODO: <Alex>ALEX</Alex>
 
-        get_from_registry(feature_config[TYPE], get_base_type_registry()).add_feature_data(
+        # TODO: <Alex>ALEX</Alex>
+        # get_from_registry(feature_config[TYPE], get_base_type_registry()).add_feature_data(
+        #     feature_config,
+        #     input_cols,
+        #     proc_cols,
+        #     training_set_metadata,
+        #     preprocessing_parameters,
+        #     backend,
+        #     skip_save_processed_input,
+        # )
+        # TODO: <Alex>ALEX</Alex>
+        # TODO: <Alex>ALEX</Alex>
+        fct = feature_config[TYPE]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-FEATURE_CONFIG_TYPE:\n{fct} ; TYPE: {str(type(fct))}')
+        br = get_base_type_registry()
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-BASE_TYPE_REGISTRY:\n{br} ; TYPE: {str(type(br))}')
+        gfr = get_from_registry(fct, br)
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-GOT_FROM_REGISTRY:\n{gfr} ; TYPE: {str(type(gfr))}')
+        gfr.add_feature_data(
             feature_config,
             input_cols,
             proc_cols,
@@ -1591,6 +1764,9 @@ def build_data(
             backend,
             skip_save_processed_input,
         )
+        # TODO: <Alex>ALEX</Alex>
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] FEATURE_CONFIG_LOOP-PROC_COLS[AFTER_ADDING_FEATURE_DATA]:\n{proc_cols} ; TYPE: {str(type(proc_cols))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::build_data()] RETURNING-PROC_COLS:\n{proc_cols} ; TYPE: {str(type(proc_cols))}')
 
     return proc_cols
 
@@ -1885,6 +2061,7 @@ def drop_extra_cols(features, dfs):
     return tuple(df[retain_cols] if df is not None else df for df in dfs)
 
 
+# TODO: <Alex>ALEX -- Refactor (it is long and complex)</Alex>
 def preprocess_for_training(
     config,
     dataset=None,
@@ -1899,6 +2076,13 @@ def preprocess_for_training(
     random_seed=default_random_seed,
     callbacks=None,
 ) -> Tuple[Dataset, Dataset, Dataset, TrainingSetMetadataDict]:
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] CONFIG:\n{config} ; TYPE: {str(type(config))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] DATASET-0:\n{dataset} ; TYPE: {str(type(dataset))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] TRAINING_SET-0:\n{training_set} ; TYPE: {str(type(training_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] TRAINING_SET_METADATA-0:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] PREPROCESSING_PARAMS:\n{preprocessing_params} ; TYPE: {str(type(preprocessing_params))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] VALIDATION_SET-0:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] TEST_SET-0:\n{test_set} ; TYPE: {str(type(test_set))}')
     """Returns training, val and test datasets with training set metadata."""
 
     # sanity check to make sure some data source is provided
@@ -1909,21 +2093,32 @@ def preprocess_for_training(
     dataset, training_set, validation_set, test_set = load_dataset_uris(
         dataset, training_set, validation_set, test_set, backend
     )
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] DATASET-1:\n{dataset} ; TYPE: {str(type(dataset))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] TRAINING_SET-1:\n{training_set} ; TYPE: {str(type(training_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] VALIDATION_SET-1:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] TEST_SET-1:\n{test_set} ; TYPE: {str(type(test_set))}')
 
     # determine data format if not provided or auto
     if not data_format or data_format == "auto":
         data_format = figure_data_format(dataset, training_set, validation_set, test_set)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] DATA_FORMAT:\n{data_format} ; TYPE: {str(type(data_format))}')
 
     # Wrap dataset into a form we can use to manage within the cache
     dataset = wrap(dataset)
     training_set = wrap(training_set)
     validation_set = wrap(validation_set)
     test_set = wrap(test_set)
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] DATASET-2:\n{dataset} ; TYPE: {str(type(dataset))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] TRAINING_SET-2:\n{training_set} ; TYPE: {str(type(training_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] VALIDATION_SET-2:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] TEST_SET-2:\n{test_set} ; TYPE: {str(type(test_set))}')
 
+    # TODO: <Alex>ALEX - Location of lock_path in main Ludwig repository directory ("ludwig") is bad.  # </Alex>
     try:
         lock_path = backend.cache.get_cache_directory(dataset)
     except (TypeError, ValueError):
         lock_path = None
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] LOCK_PATH:\n{lock_path} ; TYPE: {str(type(lock_path))}')
     with file_lock(lock_path, lock_file=".lock_preprocessing"):
         # if training_set_metadata is a string, assume it's a path to load the json
         training_set_metadata = training_set_metadata or {}
@@ -1932,18 +2127,24 @@ def preprocess_for_training(
 
         # setup
         features = config["input_features"] + config["output_features"]
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] FEATURES:\n{features} ; TYPE: {str(type(features))}')
 
         # in case data_format is one of the cacheable formats,
         # check if there's a cached hdf5 file with the same name,
         # and in case move on with the hdf5 branch.
         cached = False
         cache = backend.cache.get_dataset_cache(config, dataset, training_set, test_set, validation_set)
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CACHE:\n{cache} ; TYPE: {str(type(cache))}')
 
         # Unwrap dataset into the form used for preprocessing
         dataset = dataset.unwrap() if dataset is not None else None
         training_set = training_set.unwrap() if training_set is not None else None
         validation_set = validation_set.unwrap() if validation_set is not None else None
         test_set = test_set.unwrap() if test_set is not None else None
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-DATASET-3:\n{dataset} ; TYPE: {str(type(dataset))}')
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-TRAINING_SET-3:\n{training_set} ; TYPE: {str(type(training_set))}')
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-VALIDATION_SET-3:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-TEST_SET-3:\n{test_set} ; TYPE: {str(type(test_set))}')
 
         if data_format in CACHEABLE_FORMATS:
             with backend.storage.cache.use_credentials():
@@ -1951,6 +2152,7 @@ def preprocess_for_training(
                 # is equal to that from the cached training set metadata, as well as the paths to the
                 # cached training set metadata, training set, validation_set, test set
                 cache_results = cache.get()
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CACHE_RESULTS:\n{cache_results} ; TYPE: {str(type(cache_results))}')
                 if cache_results is not None:
                     valid, *cache_values = cache_results
                     if valid:
@@ -1969,13 +2171,19 @@ def preprocess_for_training(
                         )
                         cache.delete()
                 else:
+                    # TODO: <Alex>ALEX - Location of cached dataset in main Ludwig repository directory ("ludwig/719cbfd8993e11eeb8eb966a243c2a69.training.hdf5") is bad.  # </Alex>
                     logger.info(
                         f"No cached dataset found at {cache.get_cached_obj_path('training')}. "
                         "Preprocessing the dataset."
                     )
 
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CACHE.CHECKSUM:\n{cache.checksum} ; TYPE: {str(type(cache.checksum))}')
         training_set_metadata[CHECKSUM] = cache.checksum
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-TRAINING_SET_METADATA-1:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
         data_format_processor = get_from_registry(data_format, data_format_preprocessor_registry)
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-DATA_FORMAT_PROCESSOR:\n{data_format_processor} ; TYPE: {str(type(data_format_processor))}')
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CACHED:\n{cached} ; TYPE: {str(type(cached))}')
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-SKIP_SAVE_PROCESSED_INPUT:\n{skip_save_processed_input} ; TYPE: {str(type(skip_save_processed_input))}')
 
         if cached or data_format == "hdf5":
             with backend.storage.cache.use_credentials():
@@ -1992,8 +2200,15 @@ def preprocess_for_training(
                     backend=backend,
                     random_seed=random_seed,
                 )
+                # TODO: <Alex>ALEX -- Add docstrings: unpack from ??? (it will be tuple, hence good for caching); since it is cached, it will stay in cache.</Alex>
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-PROCESSED-40:\n{processed} ; TYPE: {str(type(processed))}')
                 training_set, test_set, validation_set, training_set_metadata = processed
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-TRAINING_SET-40:\n{training_set} ; TYPE: {str(type(training_set))}')
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-VALIDATION_SET-40:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-TEST_SET-40:\n{test_set} ; TYPE: {str(type(test_set))}')
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-TRAINING_SET_METADATA-40:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
         else:
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CALLING-PREPROCESS_FOR_TRAINING()-WITH_FEATURES:\n{features} ; TYPE: {str(type(features))}')
             processed = data_format_processor.preprocess_for_training(
                 config,
                 features,
@@ -2008,9 +2223,21 @@ def preprocess_for_training(
                 random_seed=random_seed,
                 callbacks=callbacks,
             )
+            # TODO: <Alex>ALEX -- Add docstrings: unpack from ??? Repack as tuple for caching; cache it, since it is not in cache; unpack again.</Alex>
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-PROCESSED-50:\n{processed} ; TYPE: {str(type(processed))}')
             training_set, test_set, validation_set, training_set_metadata = processed
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-TRAINING_SET-50:\n{training_set} ; TYPE: {str(type(training_set))}')
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-VALIDATION_SET-50:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-TEST_SET-50:\n{test_set} ; TYPE: {str(type(test_set))}')
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-TRAINING_SET_METADATA-50:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
             processed = (training_set, test_set, validation_set, training_set_metadata)
 
+            # TODO: <Alex>ALEX</Alex>
+            can_cache = backend.cache.can_cache(skip_save_processed_input)
+            # TODO: <Alex>ALEX</Alex>
+            # TODO: <Alex>ALEX</Alex>
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE:\n{can_cache} ; TYPE: {str(type(can_cache))}')
+            # TODO: <Alex>ALEX</Alex>
             # cache the dataset
             if backend.cache.can_cache(skip_save_processed_input):
                 with backend.storage.cache.use_credentials():
@@ -2018,12 +2245,27 @@ def preprocess_for_training(
                     processed = cache.put(*processed)
                     # set cached=True to ensure credentials are used correctly below
                     cached = True
+            # TODO: <Alex>ALEX -- Why are we unpacking again? Is caching operation expected to change dataset tuple?
+            # TODO: <Alex>ALEX</Alex>
+            if can_cache:
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE-PROCESSED-60:\n{processed} ; TYPE: {str(type(processed))}')
+            # TODO: <Alex>ALEX</Alex>
             training_set, test_set, validation_set, training_set_metadata = processed
+            # TODO: <Alex>ALEX</Alex>
+            if can_cache:
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE-TRAINING_SET-60:\n{training_set} ; TYPE: {str(type(training_set))}')
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE-VALIDATION_SET-60:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE-TEST_SET-60:\n{test_set} ; TYPE: {str(type(test_set))}')
+                print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE-TRAINING_SET_METADATA-60:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
+            # TODO: <Alex>ALEX</Alex>
 
+        # TODO: <Alex>ALEX -- Unclear: Why are we using cache context again if we already retrieved the dataset (from cache if it was cachable and cached)?</Alex>
         with backend.storage.cache.use_credentials() if cached else contextlib.nullcontext():
             logger.debug("create training dataset")
             training_dataset = backend.dataset_manager.create(training_set, config, training_set_metadata)
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE={can_cache} ; WITH_FILE_LOCK-TRAINING_DATASET-7:\n{training_dataset} ; TYPE: {str(type(training_dataset))}')
             training_set_size = len(training_dataset)
+            # TODO: <Alex>ALEX -- Fix: elif is not needed below (because error are raised).</Alex>
             if training_set_size == 0:
                 raise ValueError("Training data is empty following preprocessing.")
             elif training_set_size < MIN_DATASET_SPLIT_ROWS:
@@ -2047,6 +2289,7 @@ def preprocess_for_training(
                         f"Validation set too small to compute metrics. Need at least {MIN_DATASET_SPLIT_ROWS} rows, got"
                         f" {validation_set_size} after preprocessing."
                     )
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE={can_cache} ; WITH_FILE_LOCK-VALIDATION_DATASET-7:\n{validation_dataset} ; TYPE: {str(type(validation_dataset))}')
 
             test_dataset = None
             if test_set is not None:
@@ -2063,7 +2306,9 @@ def preprocess_for_training(
                         f"Test set too small to compute metrics. Need at least {MIN_DATASET_SPLIT_ROWS} rows, got"
                         f" {test_set_size} after preprocessing."
                     )
+            print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE={can_cache} ; TEST_DATASET-7:\n{test_dataset} ; TYPE: {str(type(test_dataset))}')
 
+        print(f'\n[ALEX_TEST] [PREPROCESSING.PY::preprocess_for_training()] WITH_FILE_LOCK-CAN_CACHE-TRAINING_SET_METADATA-70:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
         return (training_dataset, validation_dataset, test_dataset, training_set_metadata)
 
 
@@ -2172,6 +2417,7 @@ def _preprocess_file_for_training(
     return training_data, test_data, validation_data, training_set_metadata
 
 
+# TODO: <Alex>ALEX -- Put type hints on all methods</Alex>
 def _preprocess_df_for_training(
     config,
     features,
@@ -2203,6 +2449,9 @@ def _preprocess_df_for_training(
 
     logger.info("Building dataset (it may take a while)")
 
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] FEATURES:\n{features} ; TYPE: {str(type(features))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] PREPROCESSING_PARAMS:\n{preprocessing_params} ; TYPE: {str(type(preprocessing_params))}')
     data, training_set_metadata = build_dataset(
         config,
         dataset,
@@ -2214,16 +2463,24 @@ def _preprocess_df_for_training(
         backend=backend,
         callbacks=callbacks,
     )
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] DATA:\n{data} ; TYPE: {str(type(data))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] TRAINING_SET_METADATA:\n{training_set_metadata} ; TYPE: {str(type(training_set_metadata))}')
 
     logger.debug("split train-val-test")
     training_set, validation_set, test_set = drop_extra_cols(
         features, split_dataset(data, preprocessing_params, backend, random_seed)
     )
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] TRAINING_SET-0:\n{training_set} ; TYPE: {str(type(training_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] VALIDATION_SET-0:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] TEST_SET-0:\n{test_set} ; TYPE: {str(type(test_set))}')
 
     logger.info("Building dataset: DONE")
     if preprocessing_params["oversample_minority"] or preprocessing_params["undersample_majority"]:
         training_set = balance_data(training_set, config["output_features"], preprocessing_params, backend, random_seed)
 
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] TRAINING_SET-1:\n{training_set} ; TYPE: {str(type(training_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] VALIDATION_SET-1:\n{validation_set} ; TYPE: {str(type(validation_set))}')
+    print(f'\n[ALEX_TEST] [PREPROCESSING.PY::_preprocess_df_for_training()] TEST_SET-1:\n{test_set} ; TYPE: {str(type(test_set))}')
     return training_set, test_set, validation_set, training_set_metadata
 
 

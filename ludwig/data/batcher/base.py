@@ -29,6 +29,7 @@ class Batcher(ABC):
     def last_batch(self) -> bool:
         raise NotImplementedError()
 
+    # TODO: <Alex>ALEX -- Type hints</Alex>
     @abstractmethod
     def set_epoch(self, epoch: int, batch_size: int):
         raise NotImplementedError()

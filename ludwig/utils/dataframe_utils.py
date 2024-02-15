@@ -60,6 +60,7 @@ def unflatten_df(df: DataFrame, column_shapes: Dict[str, Tuple], df_engine: Data
     return df
 
 
+# TODO: <Alex>ALEX -- Modernize type hints</Alex>
 @DeveloperAPI
 def to_numpy_dataset(df: DataFrame, backend: Optional["Backend"] = None) -> Dict[str, np.ndarray]:  # noqa: F821
     """Returns a dictionary of numpy arrays, keyed by the columns of the given dataframe."""
@@ -87,7 +88,7 @@ def from_numpy_dataset(dataset) -> pd.DataFrame:
             (*vals,) = v
         else:
             # not unstacking. Needed because otherwise pandas casts types
-            # the way it wants, like converting a list of float32 scalats
+            # the way it wants, like converting a list of float32 scalars
             # to a column of float64
             vals = v
         col_mapping[k] = vals

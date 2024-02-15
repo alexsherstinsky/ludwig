@@ -75,12 +75,17 @@ class BaseModel(LudwigModule, metaclass=ABCMeta):
     @classmethod
     def build_inputs(cls, input_feature_configs: FeatureCollection[BaseInputFeatureConfig]) -> Dict[str, InputFeature]:
         """Builds and returns input features in topological order."""
+        # TODO: <Alex>ALEX -- this should be right above the loop below.</Alex>
         input_features = OrderedDict()
+        print(f'\n[ALEX_TEST] [BaseModel.build_inputs()] INPUT_FEATURES-0:\n{input_features} ; TYPE: {str(type(input_features))}')
+        print(f'\n[ALEX_TEST] [BaseModel.build_inputs()] INPUT_FEATURE_CONFIGS:\n{input_feature_configs} ; TYPE: {str(type(input_feature_configs))}')
         input_features_def = topological_sort_feature_dependencies(input_feature_configs.to_list())
+        print(f'\n[ALEX_TEST] [BaseModel.build_inputs()] INPUT_FEATURE_DEFINITIONS_TOPOLOGICALLY_SORTED:\n{input_features_def} ; TYPE: {str(type(input_features_def))}')
         for input_feature_def in input_features_def:
             input_features[input_feature_def[NAME]] = cls.build_single_input(
                 getattr(input_feature_configs, input_feature_def[NAME]), input_features
             )
+        print(f'\n[ALEX_TEST] [BaseModel.build_inputs()] INPUT_FEATURES-1:\n{input_features} ; TYPE: {str(type(input_features))}')
         return input_features
 
     @staticmethod
@@ -95,8 +100,17 @@ class BaseModel(LudwigModule, metaclass=ABCMeta):
             tied_input_feature_name = feature_config.tied
             if tied_input_feature_name in other_input_features:
                 encoder_obj = other_input_features[tied_input_feature_name].encoder_obj
+        print(f'\n[ALEX_TEST] [BaseModel.build_single_input()] FEATURE_CONFIG:\n{feature_config} ; TYPE: {str(type(feature_config))}')
+        print(f'\n[ALEX_TEST] [BaseModel.build_single_input()] ENCODER_OBJ:\n{encoder_obj} ; TYPE: {str(type(encoder_obj))}')
 
-        return create_input_feature(feature_config, encoder_obj)
+        # TODO: <Alex>ALEX</Alex>
+        # return create_input_feature(feature_config, encoder_obj)
+        # TODO: <Alex>ALEX</Alex>
+        # TODO: <Alex>ALEX</Alex>
+        a = create_input_feature(feature_config, encoder_obj)
+        print(f'\n[ALEX_TEST] [BaseModel.build_single_input()] SINGLE_INPUT_FEATURE:\n{a} ; TYPE: {str(type(a))}')
+        return a
+        # TODO: <Alex>ALEX</Alex>
 
     @classmethod
     def build_outputs(
@@ -211,6 +225,7 @@ class BaseModel(LudwigModule, metaclass=ABCMeta):
         """Predict the inputs."""
         return self.predictions(inputs)
 
+    # TODO: <Alex>ALEX -- Add type hints</Alex>
     def train_loss(
         self,
         targets,
@@ -233,6 +248,8 @@ class BaseModel(LudwigModule, metaclass=ABCMeta):
         train_loss = 0
         of_train_losses = {}
         for of_name, of_obj in self.output_features.items():
+            # print(f'\n[ALEX_TEST] [BaseModel.train_loss()] OUTPUT_FEATURE_NAME:\n{of_name} ; TYPE: {str(type(of_name))}')
+            # print(f'\n[ALEX_TEST] [BaseModel.train_loss()] OUTPUT_FEATURE_OBJECT:\n{of_obj} ; TYPE: {str(type(of_obj))}')
             of_train_loss = of_obj.train_loss(targets[of_name], predictions, of_name)
             train_loss += of_obj.loss.weight * of_train_loss
             of_train_losses[of_name] = of_train_loss
@@ -356,7 +373,17 @@ class BaseModel(LudwigModule, metaclass=ABCMeta):
 
 def create_input_feature(feature_config: BaseInputFeatureConfig, encoder_obj: Optional[Encoder]) -> InputFeature:
     input_feature_cls = get_from_registry(feature_config.type, get_input_type_registry())
+    print(f'\n[ALEX_TEST] [BaseModel.create_input_feature()] INPUT_FEATURE_CLS:\n{input_feature_cls} ; TYPE: {str(type(input_feature_cls))}')
+    print(f'\n[ALEX_TEST] [BaseModel.create_input_feature()] ENCODER_OBJ:\n{encoder_obj} ; TYPE: {str(type(encoder_obj))}')
     input_feature = input_feature_cls(feature_config, encoder_obj=encoder_obj)
+    print(f'\n[ALEX_TEST] [BaseModel.create_input_feature()] INPUT_FEATURE-0:\n{input_feature} ; TYPE: {str(type(input_feature))}')
+    print(f'\n[ALEX_TEST] [BaseModel.create_input_feature()] FEATURE_CONFIG.ENCODER.SKIP:\n{feature_config.encoder.skip} ; TYPE: {str(type(feature_config.encoder.skip))}')
     if not feature_config.encoder.skip:
         return input_feature
-    return create_passthrough_input_feature(input_feature, feature_config)
+    # TODO: <Alex>ALEX</Alex>
+    # return create_passthrough_input_feature(input_feature, feature_config)
+    # TODO: <Alex>ALEX</Alex>
+    # TODO: <Alex>ALEX</Alex>
+    a = create_passthrough_input_feature(input_feature, feature_config)
+    print(f'\n[ALEX_TEST] [BaseModel.create_input_feature()] INPUT_FEATURE-1-PASSTHROUGH:\n{a} ; TYPE: {str(type(a))}')
+    # TODO: <Alex>ALEX</Alex>

@@ -378,6 +378,7 @@ def split_dataset(
     random_seed: float = default_random_seed,
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
     splitter = get_splitter(**global_preprocessing_parameters.get(SPLIT, {}))
+    print(f'\n[ALEX_TEST] [SPLIT.PY::split_dataset()] SPLITTER:\n{splitter} ; TYPE: {str(type(splitter))}')
     datasets: Tuple[DataFrame, DataFrame, DataFrame] = splitter.split(df, backend, random_seed)
     if len(datasets[0].columns) == 0:
         raise ValueError(

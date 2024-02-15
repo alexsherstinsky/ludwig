@@ -89,6 +89,7 @@ class Backend(ABC):
 
     @contextmanager
     @abstractmethod
+    # TODO: <Alex>ALEX -- Should the return type not be Trainer object?</Alex>
     def create_trainer(self, config: BaseTrainerConfig, model: BaseModel, **kwargs) -> Generator:
         raise NotImplementedError()
 
@@ -284,12 +285,18 @@ class LocalBackend(LocalPreprocessingMixin, LocalTrainingMixin, Backend):
     ) -> BaseTrainer:  # type: ignore[override]
         from ludwig.trainers.registry import get_llm_trainers_registry, get_trainers_registry
 
+        print(f'\n[ALEX_TEST] [LocalBackend.create_trainer()] MODEL.TYPE:\n{model.type} ; TYPE: {str(type(model.type))}')
+        print(f'\n[ALEX_TEST] [LocalBackend.create_trainer()] MODEL.TYPE():\n{model.type()} ; TYPE: {str(type(model.type()))}')
         trainer_cls: type
         if model.type() == MODEL_LLM:
+            print(f'\n[ALEX_TEST] [LocalBackend.create_trainer()] CONFIG.TYPE:\n{config.type} ; TYPE: {str(type(config.type))}')
+            print(f'\n[ALEX_TEST] [LocalBackend.create_trainer()] LLM_TRAINERS_REGISTRY:\n{get_llm_trainers_registry()} ; TYPE: {str(type(get_llm_trainers_registry()))}')
             trainer_cls = get_from_registry(config.type, get_llm_trainers_registry())
         else:
+            print(f'\n[ALEX_TEST] [LocalBackend.create_trainer()] ECD_TRAINERS_REGISTRY:\n{get_trainers_registry()} ; TYPE: {str(type(get_trainers_registry()))}')
             trainer_cls = get_from_registry(model.type(), get_trainers_registry())
 
+        print(f'\n[ALEX_TEST] [LocalBackend.create_trainer()] TRAINER_CLS:\n{trainer_cls} ; TYPE: {str(type(trainer_cls))}')
         return trainer_cls(config=config, model=model, **kwargs)
 
 

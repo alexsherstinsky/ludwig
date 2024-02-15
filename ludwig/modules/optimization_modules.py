@@ -53,6 +53,8 @@ def get_optimizer_class_and_kwargs(
     return optimizer_cls, cls_kwargs
 
 
+# TODO: <Alex>ALEX -- modernize type hints</Alex>
+# TODO: <Alex>ALEX -- the interface is not correct: if only "model.parameters()" is needed, then "model" should not be passed in.</Alex>
 def create_optimizer(
     model: LudwigModule,
     optimizer_config: "BaseOptimizerConfig",
@@ -75,4 +77,9 @@ def create_optimizer(
         )
 
     optimizer_cls, optimizer_kwargs = get_optimizer_class_and_kwargs(optimizer_config, learning_rate)
+    print(f'\n[ALEX_TEST] [MODULES::OPTIMIZATION_MODULES.create_optimizer()] OPTIMIZER_CLS:\n{optimizer_cls} ; TYPE: {str(type(optimizer_cls))}')
+    # print(f'\n[ALEX_TEST] [MODULES::OPTIMIZATION_MODULES.create_optimizer()] MODEL:\n{model} ; TYPE: {str(type(model))}')
+    print(f'\n[ALEX_TEST] [MODULES::OPTIMIZATION_MODULES.create_optimizer()] MODEL.PARAMETERS-GENERATOR:\n{model.parameters()} ; TYPE: {str(type(model.parameters()))}')
+    print(f'\n[ALEX_TEST] [MODULES::OPTIMIZATION_MODULES.create_optimizer()] MODEL.PARAMETERS-LIST:\n{list(model.parameters())} ; TYPE: {str(type(list(model.parameters())))}')
+    print(f'\n[ALEX_TEST] [MODULES::OPTIMIZATION_MODULES.create_optimizer()] OPTIMIZER_KWARGS:\n{optimizer_kwargs} ; TYPE: {str(type(optimizer_kwargs))}')
     return optimizer_cls(model.parameters(), **optimizer_kwargs)

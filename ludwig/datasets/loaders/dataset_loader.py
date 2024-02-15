@@ -254,11 +254,13 @@ class DatasetLoader:
             else:
                 shutil.copy2(source, destination)
 
+    # TODO: <Alex>ALEX -- Add comments (e.g., "transform()" is where splitting takes place).</Alex>
     def _download_and_process(self, kaggle_username: str | None = None, kaggle_key: str | None = None):
         """Loads the dataset, downloaded and processing it if needed.
 
         If dataset is already processed, does nothing.
         """
+        print(f'\n[ALEX_TEST] [DATASET_LOADER._download_and_process()] SELF.STATE-0:\n{self.state} ; TYPE: {str(type(self.state))}')
         if self.state == DatasetState.NOT_LOADED:
             try:
                 self.download(kaggle_username=kaggle_username, kaggle_key=kaggle_key)
@@ -272,12 +274,14 @@ class DatasetLoader:
                 else:
                     self.download_from_fallback_mirrors()
         self.verify()
+        print(f'\n[ALEX_TEST] [DATASET_LOADER._download_and_process()] SELF.STATE-1:\n{self.state} ; TYPE: {str(type(self.state))}')
         if self.state == DatasetState.DOWNLOADED:
             # Extract dataset
             try:
                 self.extract()
             except Exception:
                 logger.exception("Failed to extract dataset")
+        print(f'\n[ALEX_TEST] [DATASET_LOADER._download_and_process()] SELF.STATE-2:\n{self.state} ; TYPE: {str(type(self.state))}')
         if self.state == DatasetState.EXTRACTED:
             # Transform dataset
             try:
@@ -301,6 +305,7 @@ class DatasetLoader:
         self._download_and_process(kaggle_username=kaggle_username, kaggle_key=kaggle_key)
         if self.state == DatasetState.TRANSFORMED:
             dataset_df = self.load_transformed_dataset()
+            print(f'\n[ALEX_TEST] [DATASET_LOADER.LOAD()] DATASET_DF:\n{dataset_df} ; TYPE: {str(type(dataset_df))} ; SHAPE: {dataset_df.shape}')
             if split:
                 return self.split(dataset_df)
             else:
@@ -371,12 +376,17 @@ class DatasetLoader:
         return list(extracted_files)
 
     def transform(self) -> None:
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.TRANSFORM()] SELF.RAW_DATASET_DIR:\n{self.raw_dataset_dir} ; TYPE: {str(type(self.raw_dataset_dir))}')
         data_filenames = [
             os.path.join(self.raw_dataset_dir, f) for f in os.listdir(self.raw_dataset_dir) if not is_archive(f)
         ]
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.TRANSFORM()] DATA_FILENAMES:\n{data_filenames} ; TYPE: {str(type(data_filenames))}')
         transformed_files = self.transform_files(data_filenames)
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.TRANSFORM()] TRANSFORMED_FILES:\n{transformed_files} ; TYPE: {str(type(transformed_files))}')
         unprocessed_dataframe = self.load_unprocessed_dataframe(transformed_files)
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.TRANSFORM()] UNPROCESSED_DATAFRAME:\n{unprocessed_dataframe} ; TYPE: {str(type(unprocessed_dataframe))}')
         transformed_dataframe = self.transform_dataframe(unprocessed_dataframe)
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.TRANSFORM()] TRANSFORMED_DATAFRAME:\n{transformed_dataframe} ; TYPE: {str(type(transformed_dataframe))}')
         self.save_processed(transformed_dataframe)
 
     def transform_files(self, file_paths: list[str]) -> list[str]:
@@ -457,12 +467,17 @@ class DatasetLoader:
             _list_of_strings(self.config.validation_filenames), root_dir=self.raw_dataset_dir
         )
         test_paths = _glob_multiple(_list_of_strings(self.config.test_filenames), root_dir=self.raw_dataset_dir)
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.load_unprocessed_dataframe()] DATASET_PATHS:\n{dataset_paths} ; TYPE: {str(type(dataset_paths))}')
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.load_unprocessed_dataframe()] TRAIN_PATHS:\n{train_paths} ; TYPE: {str(type(train_paths))}')
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.load_unprocessed_dataframe()] VALIDATION_PATHS:\n{validation_paths} ; TYPE: {str(type(validation_paths))}')
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.load_unprocessed_dataframe()] TEST_PATHS:\n{test_paths} ; TYPE: {str(type(test_paths))}')
         if self.config.name == "hugging_face":
             dataframes = self._get_dataframe_with_fixed_splits_from_hf()
         else:
             dataframes = self._get_dataframe_with_fixed_splits(
                 train_paths, validation_paths, test_paths, dataset_paths, file_paths
             )
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.load_unprocessed_dataframe()] DATAFRAMES:\n{dataframes} ; TYPE: {str(type(dataframes))}')
         return pd.concat(dataframes, ignore_index=True)
 
     def _get_dataframe_with_fixed_splits_from_hf(self):
@@ -485,20 +500,24 @@ class DatasetLoader:
             train_df = self.load_files_to_dataframe(train_paths)
             train_df[SPLIT] = 0
             dataframes.append(train_df)
+            print(f'\n[ALEX_TEST] [DATASET_LOADER._get_dataframe_with_fixed_splits()] ADDED_TRAIN_DF_WITH_SPLIT=0:\n{len(dataframes)} ; TYPE: {str(type(len(dataframes)))}')
         if len(validation_paths) > 0:
             validation_df = self.load_files_to_dataframe(validation_paths)
             validation_df[SPLIT] = 1
             dataframes.append(validation_df)
+            print(f'\n[ALEX_TEST] [DATASET_LOADER._get_dataframe_with_fixed_splits()] ADDED_VALIDATION_DF_WITH_SPLIT=1:\n{len(dataframes)} ; TYPE: {str(type(len(dataframes)))}')
         if len(test_paths) > 0:
             test_df = self.load_files_to_dataframe(test_paths)
             test_df[SPLIT] = 2
             dataframes.append(test_df)
+            print(f'\n[ALEX_TEST] [DATASET_LOADER._get_dataframe_with_fixed_splits()] ADDED_TEST_DF_WITH_SPLIT=2:\n{len(dataframes)} ; TYPE: {str(type(len(dataframes)))}')
         # If we have neither train/validation/test files nor dataset_paths in the config,
         # use data files in root dir.
         if len(dataset_paths) == len(dataframes) == 0:
             dataset_paths = file_paths
         if len(dataset_paths) > 0:
             dataframes.append(self.load_files_to_dataframe(dataset_paths))
+        print(f'\n[ALEX_TEST] [DATASET_LOADER._get_dataframe_with_fixed_splits()] LEN(DATAFRAMES):\n{len(dataframes)} ; TYPE: {str(type(len(dataframes)))}')
         return dataframes
 
     def transform_dataframe(self, dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -518,6 +537,7 @@ class DatasetLoader:
 
     def load_transformed_dataset(self) -> pd.DataFrame:
         """Load processed dataset into a dataframe."""
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.LOAD_TRANSFORMED_DATASET()] SELF.PROCESSED_DATASET_PATH:\n{self.processed_dataset_path} ; TYPE: {str(type(self.processed_dataset_path))}')
         return pd.read_parquet(self.processed_dataset_path)
 
     def get_mtime(self) -> float:
@@ -526,6 +546,7 @@ class DatasetLoader:
 
     @staticmethod
     def split(dataset: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        print(f'\n[ALEX_TEST] [DATASET_LOADER.SPLIT()] DATASET[SPLIT]:\n{dataset[SPLIT].tolist()} ; TYPE: {str(type(dataset[SPLIT]))}')
         if SPLIT in dataset:
             dataset[SPLIT] = pd.to_numeric(dataset[SPLIT])
             training_set = dataset[dataset[SPLIT] == 0].drop(columns=[SPLIT])

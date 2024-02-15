@@ -149,10 +149,15 @@ class BinaryFeatureMixin(BaseFeatureMixin):
         backend,
         is_input_feature: bool,
     ) -> FeatureMetadataDict:
+        print(f'\n[ALEX_TEST] [BinaryFeatureMixin.get_feature_meta()] COLUMN:\n{column} ; TYPE: {str(type(column))} ; IS_INPUT_FEATURE={is_input_feature}')
+        print(f'\n[ALEX_TEST] [BinaryFeatureMixin.get_feature_meta()] PREPROCESSING_PARAMETERS:\n{preprocessing_parameters} ; TYPE: {str(type(preprocessing_parameters))}')
+        print(f'\n[ALEX_TEST] [BinaryFeatureMixin.get_feature_meta()] BACKEND:\n{backend} ; TYPE: {str(type(backend))}')
+        # TODO: <Alex>ALEX -- What is the meaning of this operation?  Is this a way of checking that this is not an input feature (because input features have undergone conditioning)?  Must find out and add docstring.</Alex>
         if column.dtype != object:
             return {}
 
         distinct_values = backend.df_engine.compute(column.drop_duplicates())
+        print(f'\n[ALEX_TEST] [BinaryFeatureMixin.get_feature_meta()] DISTINCT_VALUES:\n{distinct_values} ; TYPE: {str(type(distinct_values))}')
         if len(distinct_values) > 2:
             raise InputDataError(
                 column.name, BINARY, f"expects 2 distinct values, found {distinct_values.values.tolist()}"
@@ -273,6 +278,7 @@ class BinaryOutputFeature(BinaryFeatureMixin, OutputFeature):
         self.decoder_obj = self.initialize_decoder(output_feature_config.decoder)
         self._setup_loss()
         self._setup_metrics()
+        print(f'\n[ALEX_TEST] [BinaryOutputFeature.__INIT__()] SELF.THRESHOLD(ALREADY_CALLED__SETUP_LOSS()_AND__SETUP_METRICS()):\n{self.threshold} ; TYPE: {str(type(self.threshold))}')
 
     def logits(self, inputs, **kwargs):
         hidden = inputs[HIDDEN]

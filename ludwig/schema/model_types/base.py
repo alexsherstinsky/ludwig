@@ -82,6 +82,7 @@ class ModelConfig(schema_utils.BaseMarshmallowConfig, ABC):
         # Auxiliary checks.
         get_config_check_registry().check_config(self)
 
+    # TODO: <Alex>ALEX -- add type hints everywhere and replace quoted types with actual types (using "future").</Alex>
     @staticmethod
     def from_dict(config: ModelConfigDict) -> "ModelConfig":
         config = copy.deepcopy(config)

@@ -177,6 +177,7 @@ class Trainer(BaseTrainer):
         self.device = device
         if self.device is None:
             self.device = get_torch_device()
+        print(f'\n[ALEX_TEST] [Trainer.__INIT__()] SELF.DEVICE:\n{self.device} ; TYPE: {str(type(self.device))}')
 
         self.model = model
         self.model.prepare_for_training()
@@ -202,6 +203,7 @@ class Trainer(BaseTrainer):
 
         # Setup for automatic mixed precision (AMP)
         self.use_amp = config.use_mixed_precision and self.distributed.allow_mixed_precision()
+        print(f'\n[ALEX_TEST] [Trainer.__INIT__()] SELF.USE_AMP(AUTOMATIC_MIXED_PRECISION):\n{self.use_amp} ; TYPE: {str(type(self.use_amp))}')
         if self.use_amp:
             if torch.cuda.is_available():
                 logger.info("Enabling automatic mixed precision (AMP)")
@@ -246,11 +248,14 @@ class Trainer(BaseTrainer):
             else:
                 raise RuntimeError("Error when trying to enable gradient checkpointing.")
 
+        print(f'\n[ALEX_TEST] [Trainer.prepare()] SELF.DISTRIBUTED:\n{self.distributed} ; TYPE: {str(type(self.distributed))}')
         self.dist_model, self.optimizer = self.distributed.prepare(
             self.compiled_model,
             self.config,
             self.base_learning_rate,
         )
+        print(f'\n[ALEX_TEST] [Trainer.prepare()] SELF.DIST_MODEL:\n{self.dist_model} ; TYPE: {str(type(self.dist_model))}')
+        print(f'\n[ALEX_TEST] [Trainer.prepare()] SELF.OPTIMIZER:\n{self.optimizer} ; TYPE: {str(type(self.optimizer))}')
 
         # NOTE: This is a partially configured LRScheduler. It will be updated in the first call to train_step.
         self.scheduler = LRScheduler(self.config.learning_rate_scheduler, self.optimizer, 0, 0)
@@ -272,7 +277,9 @@ class Trainer(BaseTrainer):
         Returns:
             A tuple of the loss tensor and a dictionary of loss for every output feature.
         """
+        # print(f'\n[ALEX_TEST] [Trainer.train_step()] SELF.DISTRIBUTED:\n{self.distributed} ; TYPE: {str(type(self.distributed))}')
         if isinstance(self.optimizer, torch.optim.LBFGS):
+            print(f'\n[ALEX_TEST] [Trainer.train_step()] SELF.OPTIMIZER-IS_TORCH.OPTIM.LBFGS:\n{self.optimizer} ; TYPE: {str(type(self.optimizer))}')
             # NOTE: Horovod is not supported for L-BFGS.
             # NOTE: AMP is not supported for L-BFGS yet.
             # NOTE: gradient accumulation is not supported for L-BFGS yet.
@@ -303,20 +310,28 @@ class Trainer(BaseTrainer):
 
             return loss, all_losses
 
+        # TODO: <Alex>ALEX -- 1. Compute Loss</Alex>
+        # print(f'\n[ALEX_TEST] [Trainer.train_step()] SELF.OPTIMIZER:\n{self.optimizer} ; TYPE: {str(type(self.optimizer))}')
+        print(f'\n[ALEX_TEST] [Trainer.train_step()] SELF.SCALER:\n{self.scaler} ; TYPE: {str(type(self.scaler))}')
         with torch.cuda.amp.autocast() if self.use_amp else contextlib.nullcontext():
+            print(f'\n[ALEX_TEST] [Trainer.train_step()] SELF.DIST_MODEL:\n{self.dist_model} ; TYPE: {str(type(self.dist_model))}')
             with self.distributed.prepare_model_update(self.dist_model, should_step=should_step):
                 # Obtain model predictions and loss
                 model_outputs = self.dist_model((inputs, targets))
+                print(f'\n[ALEX_TEST] [Trainer.train_step()] SELF.MODEL:\n{self.model} ; TYPE: {str(type(self.model))}')
                 loss, all_losses = self.model.train_loss(
                     targets, model_outputs, self.regularization_type, self.regularization_lambda
                 )
                 loss = loss / self.gradient_accumulation_steps
 
+        # TODO: <Alex>ALEX -- 2. Update weights/biases (Backward -- this is where Loss gradients are computed)</Alex>
         # Begin the backward pass
+        # TODO: <Alex>ALEX -- This "variables" can be moved close to where it is used.</Alex>
         variables = self.dist_model.parameters()
         if self.use_amp:
             self.scaler.scale(loss).backward()
         else:
+            # TODO: <Alex>ALEX -- 2. Here: Update weights/biases (Backward -- this is where Loss gradients are computed)</Alex>
             self.distributed.backward(loss, self.dist_model)
 
         if not should_step:
@@ -334,16 +349,20 @@ class Trainer(BaseTrainer):
             # https://pytorch.org/docs/master/notes/amp_examples.html#gradient-clipping
             self.scaler.unscale_(self.optimizer)
 
+        print(f'\n[ALEX_TEST] [Trainer.train_step()] SELF.DISTRIBUTED.ALLOW_CLIP_GRADIENTS():\n{self.distributed.allow_clip_gradients()} ; TYPE: {str(type(self.distributed.allow_clip_gradients()))}')
+        print(f'\n[ALEX_TEST] [Trainer.train_step()] VARIABLES:\n{variables} ; TYPE: {str(type(variables))}')
         if self.distributed.allow_clip_gradients():
             # Clip gradients
             self.clip_grads(variables)
 
+        # TODO: <Alex>ALEX -- 3. Run one Optimizer step to apply gradients -- to update model parameters (weights/biases).</Alex>
         # Apply gradient updates
         with self.distributed.prepare_optimizer_update(self.optimizer):
             # Because we already synchronized above, we skip doing so here
             if self.use_amp:
                 self.scaler.step(self.optimizer)
             else:
+                # TODO: <Alex>ALEX -- 3. Here: Run one optimization step to apply gradients -- to update model parameters (weights/biases).</Alex>
                 self.distributed.step(self.optimizer)
 
         if self.use_amp:
@@ -878,6 +897,7 @@ class Trainer(BaseTrainer):
             )
             if self.is_coordinator():
                 logger.info("Creating fresh model training run.")
+        print(f'\n[ALEX_TEST] [Trainer.train()] PROGRESS_TRACKER:\n{progress_tracker} ; TYPE: {str(type(progress_tracker))}')
 
         # Distributed: broadcast initial variable states from rank 0 to all other processes.
         # This is necessary to ensure consistent initialization of all workers when
@@ -909,6 +929,7 @@ class Trainer(BaseTrainer):
             profiler = None
 
         try:
+            print(f'\n[ALEX_TEST] [Trainer.train()] CALLING::TRAINING_SET.INITIALIZE_BATCHER()-WITH_BATCH_SIZE:\n{self.batch_size} ; TYPE: {str(type(self.batch_size))} ; AUGMENTATION_PIPELINE: {self.model.get_augmentation_pipelines()} ; TYPE: {str(type(self.model.get_augmentation_pipelines()))}')
             with training_set.initialize_batcher(
                 batch_size=self.batch_size,
                 should_shuffle=self.should_shuffle,
@@ -917,6 +938,7 @@ class Trainer(BaseTrainer):
                 ignore_last=True,
                 augmentation_pipeline=self.model.get_augmentation_pipelines(),
             ) as batcher:
+                print(f'\n[ALEX_TEST] [Trainer.train()] BATCHER:\n{batcher} ; TYPE: {str(type(batcher))}')
                 # ================ Training Loop ================
                 self.steps_per_epoch = batcher.steps_per_epoch
                 self.total_steps = get_total_steps(self.epochs, batcher.steps_per_epoch, self.train_steps)
@@ -928,11 +950,14 @@ class Trainer(BaseTrainer):
                     self.checkpoints_per_epoch,
                     self.is_coordinator(),
                 )
+                print(f'\n[ALEX_TEST] [Trainer.train()] FINAL_STEPS_PER_CHECKPOINT-0:\n{final_steps_per_checkpoint} ; TYPE: {str(type(final_steps_per_checkpoint))}')
                 final_steps_per_checkpoint = min(final_steps_per_checkpoint, self.total_steps)
+                print(f'\n[ALEX_TEST] [Trainer.train()] FINAL_STEPS_PER_CHECKPOINT-1:\n{final_steps_per_checkpoint} ; TYPE: {str(type(final_steps_per_checkpoint))}')
                 early_stopping_steps = final_steps_per_checkpoint * self.early_stop
                 if not self.skip_save_progress:
                     self.total_expected_checkpoints = self.total_steps // final_steps_per_checkpoint + self.epochs
 
+                print(f'\n[ALEX_TEST] [Trainer.train()] SELF.OPTIMIZER:\n{self.optimizer} ; TYPE: {str(type(self.optimizer))}')
                 # Initialize the learning rate scheduler.
                 self.scheduler = LRScheduler(
                     self.config.learning_rate_scheduler,
@@ -940,8 +965,11 @@ class Trainer(BaseTrainer):
                     steps_per_checkpoint=final_steps_per_checkpoint,
                     total_steps=self.total_steps,
                 )
+                print(f'\n[ALEX_TEST] [Trainer.train()] SELF.SCHEDULER:\n{self.scheduler} ; TYPE: {str(type(self.scheduler))}')
 
+                # TODO: <Alex>ALEX -- Can all things under "self.is_coordinator()" be turned into decorated functions?</Alex>
                 if self.is_coordinator():
+                    # TODO: <Alex>ALEX -- this is repetitive (the calculation already exists in the Batcher)</Alex>
                     logger.info(
                         f"Training for {self.total_steps} step(s), approximately "
                         f"{int(self.total_steps / batcher.steps_per_epoch)} epoch(s)."
@@ -964,6 +992,7 @@ class Trainer(BaseTrainer):
                     "file": sys.stdout,
                 }
                 progress_bar = LudwigProgressBar(self.report_tqdm_to_ray, progress_bar_config, self.is_coordinator())
+                print(f'\n[ALEX_TEST] [Trainer.train()] PROGRESS_BAR:\n{progress_bar} ; TYPE: {str(type(progress_bar))}')
 
                 if profiler:
                     profiler.start()
@@ -1002,6 +1031,7 @@ class Trainer(BaseTrainer):
                         early_stopping_steps,
                         profiler,
                     )
+                    print(f'\n[ALEX_TEST] [Trainer.train()] SHOULD_BREAK:\n{should_break} ; TYPE: {str(type(should_break))}')
                     if self.is_coordinator():
                         # ========== Save training progress ==========
                         logger.debug(
@@ -1071,6 +1101,7 @@ class Trainer(BaseTrainer):
                         and self.model.config_obj.quantization
                         and self.model.config_obj.quantization.bits == 8
                     ):
+                        # TODO: <AlexeALEX -- Improve the wording of this docstring.</Alex>
                         # If the model was previously placed on GPU, 8-bit parameter state will be updated with several
                         # matrices containing quantization information. These are recorded matrices are recorded in the
                         # training checkpoint state dicts, but do not necessarily exist in the parameter object, leading
@@ -1137,16 +1168,22 @@ class Trainer(BaseTrainer):
         batch_idx = 0
         should_break = False
         while not batcher.last_batch() and progress_tracker.steps < self.total_steps and not should_break:
+            print(f'\n[ALEX_TEST] [Trainer._train_loop()] BATCH_IDX:\n{batch_idx} ; TYPE: {str(type(batch_idx))}')
             progress_tracker.learning_rate = self.optimizer.param_groups[0]["lr"]
             self.callback(lambda c: c.on_batch_start(self, progress_tracker, save_path))
 
+            print(f'\n[ALEX_TEST] [Trainer._train_loop()] PROGRESS_TRACKER.LEARNING_RATE-CALLING:BATCHER.NEXT_BATCH():\n{progress_tracker.learning_rate} ; TYPE: {str(type(progress_tracker.learning_rate))}')
             # obtain batch
             batch = batcher.next_batch()
+            # print(f'\n[ALEX_TEST] [Trainer._train_loop()] BATCH:\n{batch} ; TYPE: {str(type(batch))}')
 
             # determine whether we need to accumulate gradients as trigger a full parameter update
             should_sync_grads = (batch_idx + 1) % self.gradient_accumulation_steps == 0
+            print(f'\n[ALEX_TEST] [Trainer._train_loop()] SHOULD_SYNC_GRADS:\n{should_sync_grads} ; TYPE: {str(type(should_sync_grads))}')
             is_checkpoint_step = (progress_tracker.steps + 1) % final_steps_per_checkpoint == 0
+            print(f'\n[ALEX_TEST] [Trainer._train_loop()] IS_CHECKPOINT_STEP:\n{is_checkpoint_step} ; TYPE: {str(type(is_checkpoint_step))}')
             should_step = should_sync_grads or is_checkpoint_step
+            print(f'\n[ALEX_TEST] [Trainer._train_loop()] SHOULD_STEP:\n{should_step} ; TYPE: {str(type(should_step))}')
             batch_idx += 1
 
             # Move tensors to cuda here.
@@ -1160,7 +1197,10 @@ class Trainer(BaseTrainer):
             }
 
             loss, all_losses = self.train_step(inputs, targets, should_step=should_step, profiler=profiler)
+            print(f'\n[ALEX_TEST] [Trainer._train_loop()] LOSS:\n{loss} ; TYPE: {str(type(loss))}')
+            print(f'\n[ALEX_TEST] [Trainer._train_loop()] ALL_LOSSES:\n{all_losses} ; TYPE: {str(type(all_losses))}')
 
+            # TODO: <Alex>ALEX -- This comment (and entire logic of LR Scheduler) is unclear (this is in the "train loop").</Alex>
             # Update LR schduler here instead of train loop to avoid updating during batch size tuning, etc.
             self.scheduler.step()
 
@@ -1174,6 +1214,7 @@ class Trainer(BaseTrainer):
                 )
 
             progress_tracker.steps += 1
+            print(f'\n[ALEX_TEST] [Trainer._train_loop()] PROGRESS_TRACKER.STEPS(AFTER_SELF.TRAIN_STEP();AFTER_SELF.SCHEDULER.STEP()):\n{progress_tracker.steps} ; TYPE: {str(type(progress_tracker.steps))}')
             progress_bar.set_postfix({"loss": float(loss)})
             progress_bar.update(1)
             if self.is_coordinator():

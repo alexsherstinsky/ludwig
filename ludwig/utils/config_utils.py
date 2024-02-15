@@ -46,6 +46,7 @@ def get_defaults_section_for_feature_type(
 def get_preprocessing_params(config_obj: ModelConfig) -> PreprocessingConfigDict:
     """Returns a new dictionary that merges preprocessing section of config with type-specific preprocessing
     parameters from config defaults."""
+    # TODO: <Alex>ALEX -- This code can be simplified by removing empty dictionary initialization.</Alex>
     preprocessing_params = {}
     preprocessing_params.update(config_obj.preprocessing.to_dict())
     for feat_type in get_input_type_registry().keys():

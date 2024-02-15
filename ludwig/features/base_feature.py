@@ -164,6 +164,7 @@ class BaseFeature:
         self.proc_column = feature.proc_column
 
 
+# TODO: <Alex>ALEX -- Get rid of the quoted types using "from future".</Alex>
 class InputFeature(BaseFeature, LudwigModule, ABC):
     """Parent class for all input features."""
 
@@ -199,6 +200,7 @@ class InputFeature(BaseFeature, LudwigModule, ABC):
         raise NotImplementedError("Torchscript tracing not supported for feature")
 
 
+# TODO: <Alex>ALEX - Modernize type hints</Alex>
 class OutputFeature(BaseFeature, LudwigModule, ABC):
     """Parent class for all output features."""
 
@@ -220,7 +222,9 @@ class OutputFeature(BaseFeature, LudwigModule, ABC):
 
         # List of names of metrics that this OutputFeature computes.
         self.metric_names = []
+        print(f'\n[ALEX_TEST] [OutputFeature.__INIT__()] FEATURE:\n{feature} ; TYPE: {str(type(feature))}')
         self.loss = feature.loss
+        print(f'\n[ALEX_TEST] [OutputFeature.__INIT__()] SELF.LOSS=FEATURE.LOSS:\n{self.loss} ; TYPE: {str(type(self.loss))}')
         self.reduce_input = feature.reduce_input
         self.reduce_dependencies = feature.reduce_dependencies
 
@@ -287,8 +291,21 @@ class OutputFeature(BaseFeature, LudwigModule, ABC):
 
     def train_loss(self, targets: Tensor, predictions: Dict[str, Tensor], feature_name):
         loss_class = type(self.train_loss_function)
+        print(f'\n[ALEX_TEST] [OutputFeature.train_loss()] LOSS_CLASS:\n{loss_class} ; TYPE: {str(type(loss_class))}')
+        print(f'\n[ALEX_TEST] [OutputFeature.train_loss()] OUTPUT_FEATURE_NAME:\n{feature_name} ; TYPE: {str(type(feature_name))}')
+        print(f'\n[ALEX_TEST] [OutputFeature.train_loss()] LOSS_INPUTS_FOR_OUTPUT_FEATURE_NAME[{feature_name}]:\n{loss_class.get_loss_inputs()} ; TYPE: {str(type(loss_class.get_loss_inputs()))}')
         prediction_key = output_feature_utils.get_feature_concat_name(feature_name, loss_class.get_loss_inputs())
+        print(f'\n[ALEX_TEST] [OutputFeature.train_loss()] PREDICTION_KEY_FOR_OUTPUT_FEATURE_NAME[{feature_name}]:\n{prediction_key} ; TYPE: {str(type(prediction_key))}')
+        # TODO: <Alex>ALEX</Alex>
         return self.train_loss_function(predictions[prediction_key], targets)
+        # TODO: <Alex>ALEX</Alex>
+        # TODO: <Alex>ALEX</Alex>
+        # a = self.train_loss_function(predictions[prediction_key], targets)
+        # print(f'\n[ALEX_TEST] [OutputFeature.train_loss()] LOSS_FOR_OUTPUT_FEATURE_NAME[{feature_name}]:\n{a} ; TYPE: {str(type(a))}')
+        # b = a.grad_fn
+        # print(f'\n[ALEX_TEST] [OutputFeature.train_loss()] LOSS_GRAPH_FOR_OUTPUT_FEATURE_NAME[{feature_name}]:\n{b} ; TYPE: {str(type(b))}')
+        # return a
+        # TODO: <Alex>ALEX</Alex>
 
     def eval_loss(self, targets: Tensor, predictions: Dict[str, Tensor]):
         loss_class = type(self.train_loss_function)
@@ -300,8 +317,11 @@ class OutputFeature(BaseFeature, LudwigModule, ABC):
             return self.eval_loss_metric.get_current_value(predictions[prediction_key].detach(), targets)
         return self.eval_loss_metric(predictions[prediction_key].detach(), targets)
 
+    # TODO: <Alex>ALEX -- this is not a good approach, because a private method (_setup_loss) is called by a subclass (OutputFeature); an interface would be better.</Alex>
+    # TODO: <Alex>ALEX -- On the other hand, why does this method not go to class that needs it (OutputFeature)?  Must investigate.  </Alex>
     def _setup_loss(self):
         self.train_loss_function = create_loss(self.loss)
+        print(f'\n[ALEX_TEST] [OutputFeature._setup_loss()] SELF.TRAIN_LOSS_FUNCTION:\n{self.train_loss_function} ; TYPE: {str(type(self.train_loss_function))}')
         self._eval_loss_metric = ModuleWrapper(get_metric_cls(self.type(), self.loss.type)(config=self.loss))
 
     def _setup_metrics(self):

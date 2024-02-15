@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from ludwig.utils.checkpoint_utils import Checkpoint
 
 
+# TODO: <Alex>ALEX -- This docstring needs some wording improvement.</Alex>
 class DistributedStrategy(ABC):
     """Interface that wraps a distributed training framework (Horovod, DDP).
 
@@ -54,10 +55,16 @@ class DistributedStrategy(ABC):
     def to_device(self, model: BaseModel, device: torch.device | None = None) -> nn.Module:
         return model.to_device(device if device is not None else get_torch_device())
 
+    # TODO: <Alex>ALEX -- Add docstring explaining that this operation computes the gradients of the Loss function.</Alex>
     def backward(self, loss: torch.Tensor, model: nn.Module):
+        print(f'\n[ALEX_TEST] [DistributedStrategy.backward()] LOSS:\n{loss} ; TYPE: {str(type(loss))}')
+        print(f'\n[ALEX_TEST] [DistributedStrategy.backward()] LOSS.REQUIRES_GRAD:\n{loss.requires_grad} ; TYPE: {str(type(loss.requires_grad))}')
         loss.backward()
 
     def step(self, optimizer: Optimizer, *args, **kwargs):
+        print(f'\n[ALEX_TEST] [DistributedStrategy.step()] OPTIMIZER:\n{optimizer} ; TYPE: {str(type(optimizer))}')
+        print(f'\n[ALEX_TEST] [DistributedStrategy.step()] ARGS:\n{args} ; TYPE: {str(type(args))}')
+        print(f'\n[ALEX_TEST] [DistributedStrategy.step()] KWARGS:\n{kwargs} ; TYPE: {str(type(kwargs))}')
         optimizer.step(*args, **kwargs)
 
     def zero_grad(self, optimizer: Optimizer):
@@ -204,7 +211,14 @@ class LocalStrategy(DistributedStrategy):
         trainer_config: ECDTrainerConfig,
         base_learning_rate: float,
     ) -> tuple[nn.Module, Optimizer]:
-        return model, create_optimizer(model, trainer_config.optimizer, base_learning_rate)
+        # TODO: <Alex>ALEX</Alex>
+        # return model, create_optimizer(model, trainer_config.optimizer, base_learning_rate)
+        # TODO: <Alex>ALEX</Alex>
+        # TODO: <Alex>ALEX</Alex>
+        a = create_optimizer(model, trainer_config.optimizer, base_learning_rate)
+        # print(f'\n[ALEX_TEST] [LocalStrategy.prepare()] CREATED_OPTIMIZER:\n{a} ; TYPE: {str(type(a))}')
+        return model, a
+        # TODO: <Alex>ALEX</Alex>
 
     def size(self) -> int:
         return 1

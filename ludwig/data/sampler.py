@@ -40,6 +40,9 @@ class DistributedSampler:
         self.total_size = self.num_samples * self.num_replicas
         self.shuffle = shuffle
         self.random_seed = random_seed
+        print(f'\n[ALEX_TEST] [DistributedSampler.__INIT__()] SELF.RANK:\n{self.rank} ; TYPE: {str(type(self.rank))}')
+        print(f'\n[ALEX_TEST] [DistributedSampler.__INIT__()] SELF.NUM_REPLICAS:\n{self.num_replicas} ; TYPE: {str(type(self.num_replicas))}')
+        print(f'\n[ALEX_TEST] [DistributedSampler.__INIT__()] SELF.TOTAL_SIZE:\n{self.total_size} ; TYPE: {str(type(self.total_size))}')
 
     def __iter__(self):
         if self.shuffle:
@@ -49,14 +52,24 @@ class DistributedSampler:
             indices = list(range(self.dataset_size))
 
         # add extra samples to make it evenly divisible
+        # print(f'\n[ALEX_TEST] [DistributedSampler.__ITER__()] INDICES-0:\n{indices} ; TYPE: {str(type(indices))}')
         indices += indices[: (self.total_size - len(indices))]
         assert len(indices) == self.total_size
+        # print(f'\n[ALEX_TEST] [DistributedSampler.__ITER__()] INDICES-1:\n{indices} ; TYPE: {str(type(indices))}')
 
         # subsample
         indices = indices[self.rank : self.total_size : self.num_replicas]
+        # print(f'\n[ALEX_TEST] [DistributedSampler.__ITER__()] INDICES-2-SUBSAMPLED:\n{indices} ; TYPE: {str(type(indices))}')
         assert len(indices) == self.num_samples
 
-        return iter(indices)
+        # TODO: <Alex>ALEX</Alex>
+        # return iter(indices)
+        # TODO: <Alex>ALEX</Alex>
+        # TODO: <Alex>ALEX</Alex>
+        a = iter(indices)
+        print(f'\n[ALEX_TEST] [DistributedSampler.__ITER__()] ITER(INDICES)-FROM-SUBSAMPLED:\n{a} ; TYPE: {str(type(a))}')
+        return a
+        # TODO: <Alex>ALEX</Alex>
 
     def __len__(self):
         return self.num_samples

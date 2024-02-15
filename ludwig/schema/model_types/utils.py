@@ -160,6 +160,7 @@ def set_validation_parameters(config: "ModelConfig"):
         config.trainer.validation_metric = output_config_registry(config.model_type)[out_type].default_validation_metric
 
 
+# TODO: <Alex>ALEX -- We could factor this out to create a separate method that creates the "column" and "prooc_column" for any kind of a feature.</Alex>
 def set_derived_feature_columns_(config_obj: "ModelConfig"):
     """Assigns column and proc_column values to features that do not have them set.
 

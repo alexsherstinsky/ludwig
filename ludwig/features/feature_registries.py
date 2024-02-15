@@ -111,15 +111,27 @@ def get_output_type_registry() -> Dict:
     }
 
 
+# TODO: <Alex>ALEX -- Use real type hints</Alex>
 def update_config_with_metadata(config_obj: "ModelConfig", training_set_metadata: Dict[str, Any]):
     # populate input features fields depending on data
+    # TODO: <Alex>ALEX</Alex>
+    a = get_input_type_registry()
+    print(f'\n[ALEX_TEST] [FEATURE_REGISTRIES::update_config_with_metadata()] INPUT_TYPE_REGISTRY:\n{a} ; TYPE: {str(type(a))}')
+    # TODO: <Alex>ALEX</Alex>
     for input_feature in config_obj.input_features:
+        # TODO: <Alex>ALEX -- This can be mode more efficient.</Alex>
         feature = get_from_registry(input_feature.type, get_input_type_registry())
+        print(f'\n[ALEX_TEST] [FEATURE_REGISTRIES::update_config_with_metadata()] FEATURE_FOR_INPUT_FEATURE_NAME[{input_feature.name}]TYPE[{input_feature.type}]:\n{feature} ; TYPE: {str(type(feature))}')
         feature.update_config_with_metadata(input_feature, training_set_metadata[input_feature.name])
 
     # populate output features fields depending on data
+    # TODO: <Alex>ALEX</Alex>
+    b = get_output_type_registry()
+    print(f'\n[ALEX_TEST] [FEATURE_REGISTRIES::update_config_with_metadata()] OUTPUT_TYPE_REGISTRY:\n{b} ; TYPE: {str(type(b))}')
+    # TODO: <Alex>ALEX</Alex>
     for output_feature in config_obj.output_features:
         feature = get_from_registry(output_feature.type, get_output_type_registry())
+        print(f'\n[ALEX_TEST] [FEATURE_REGISTRIES::update_config_with_metadata()] FEATURE_FOR_OUTPUT_FEATURE_NAME[{output_feature.name}]TYPE[{output_feature.type}]:\n{feature} ; TYPE: {str(type(feature))}')
         feature.update_config_with_metadata(output_feature, training_set_metadata[output_feature.name])
 
 

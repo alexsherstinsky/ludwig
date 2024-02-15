@@ -57,10 +57,15 @@ def _get_dataset_config(dataset_name) -> DatasetConfig:
 def get_dataset(dataset_name, cache_dir=None) -> DatasetLoader:
     """Gets an instance of the dataset loader for a dataset."""
     config = _get_dataset_config(dataset_name)
+    print(f'\n[ALEX_TEST] [DATASETS.__INIT__.get_dataset()] DATASET_NAME:\n{dataset_name} ; TYPE: {str(type(dataset_name))}')
+    print(f'\n[ALEX_TEST] [DATASETS.__INIT__.get_dataset()] CONFIG:\n{config} ; TYPE: {str(type(config))}')
     class_name = config.loader.split(".")[-1]
     module_name = "." + ".".join(config.loader.split(".")[:-1])
+    print(f'\n[ALEX_TEST] [DATASETS.__INIT__.get_dataset()] CLASS_NAME:\n{class_name} ; TYPE: {str(type(class_name))}')
+    print(f'\n[ALEX_TEST] [DATASETS.__INIT__.get_dataset()] MODULE_NAME:\n{module_name} ; TYPE: {str(type(module_name))}')
     loader_module = importlib.import_module(module_name, package="ludwig.datasets.loaders")
     loader_cls = getattr(loader_module, class_name)
+    print(f'\n[ALEX_TEST] [DATASETS.__INIT__.get_dataset()] LOADER_CLS:\n{loader_cls} ; TYPE: {str(type(loader_cls))}')
     if cache_dir:
         return loader_cls(config, cache_dir=cache_dir)
     return loader_cls(config)

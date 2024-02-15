@@ -43,6 +43,7 @@ def get_latest_metrics_dict(
 
 
 @DeveloperAPI
+# TODO: <Alex>ALEX -- Add type hints all around</Alex>
 def get_new_progress_tracker(
     batch_size: int,
     best_eval_metric_value: float,
@@ -80,6 +81,7 @@ def get_new_progress_tracker(
     )
 
 
+# TODO: <Alex>ALEX -- Should this be some kind of a "dataclass"?</Alex>
 @DeveloperAPI
 class ProgressTracker:
     def __init__(

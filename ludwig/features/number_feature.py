@@ -162,6 +162,7 @@ class InterQuartileTransformer(NumberTransformer):
     def inverse_transform_inference(self, x: torch.Tensor) -> torch.Tensor:
         return x * self.interquartile_range + self.q2
 
+    # TODO: <Alex>ALEX -- modernize type hints</Alex>
     @staticmethod
     def fit_transform_params(column: np.ndarray, backend: "Backend") -> Dict[str, Any]:  # noqa
         # backend.df_engine.compute is not used here because `percentile` is not parallelized in dask.
@@ -314,6 +315,7 @@ class NumberFeatureMixin(BaseFeatureMixin):
     def cast_column(column, backend):
         return backend.df_engine.df_lib.to_numeric(column, errors="coerce").astype(np.float32)
 
+    # TODO: <Alex>ALEX -- Looks like "config" is not used.</Alex>
     @staticmethod
     def get_feature_meta(
         config: ModelConfigDict,
@@ -322,20 +324,29 @@ class NumberFeatureMixin(BaseFeatureMixin):
         backend,
         is_input_feature: bool,
     ) -> FeatureMetadataDict:
+        print(f'\n[ALEX_TEST] [NumberFeatureMixin.get_feature_meta()] COLUMN:\n{column} ; TYPE: {str(type(column))} ; IS_INPUT_FEATURE={is_input_feature}')
+        print(f'\n[ALEX_TEST] [NumberFeatureMixin.get_feature_meta()] PREPROCESSING_PARAMETERS:\n{preprocessing_parameters} ; TYPE: {str(type(preprocessing_parameters))}')
+        print(f'\n[ALEX_TEST] [NumberFeatureMixin.get_feature_meta()] BACKEND:\n{backend} ; TYPE: {str(type(backend))}')
+        # TODO: <Alex>ALEX -- Can/should this call be replaced with "get_transformer()" with empty "metadata" argument?</Alex>
         numeric_transformer: NumberTransformer = get_from_registry(
             preprocessing_parameters.get("normalization", None),
             numeric_transformation_registry,
         )
+        print(f'\n[ALEX_TEST] [NumberFeatureMixin.get_feature_meta()] NUMERIC_TRANSFORMER:\n{numeric_transformer} ; TYPE: {str(type(numeric_transformer))}')
 
         params = numeric_transformer.fit_transform_params(column, backend)
+        print(f'\n[ALEX_TEST] [NumberFeatureMixin.get_feature_meta()] PARAMS-0:\n{params} ; TYPE: {str(type(params))}')
 
         # Ensure mean and std are computed if we're removing outliers
         outlier_strategy = preprocessing_parameters.get("outlier_strategy")
+        # TODO: <Alex>ALEX -- the logic could be changed to the more compact "not (a and b)" style.</Alex>
         if outlier_strategy is not None and ("mean" not in params or "std" not in params):
             params.update(ZScoreTransformer.fit_transform_params(column, backend))
+        print(f'\n[ALEX_TEST] [NumberFeatureMixin.get_feature_meta()] PARAMS-1:\n{params} ; TYPE: {str(type(params))}')
 
         return params
 
+    # TODO: <Alex>ALEX -- This method could (in principle) be factored out analogously to its Categorical feature counterpart.</Alex>
     @staticmethod
     def add_feature_data(
         feature_config,
@@ -356,14 +367,23 @@ class NumberFeatureMixin(BaseFeatureMixin):
         #     return series
 
         def normalize(series: pd.Series) -> pd.Series:
+            print(f'\n[ALEX_TEST] [NumberFeatureMixin.add_feature_data().normalize()] SERIES:\n{series} ; TYPE: {str(type(series))}')
+            # TODO: <Alex>ALEX -- the dictionary operations in this code can be simplified.</Alex>
             _feature_metadata = copy.deepcopy(metadata[feature_config[NAME]])
             _feature_metadata.update({NAME: feature_config[NAME]})
+            print(f'\n[ALEX_TEST] [NumberFeatureMixin.add_feature_data().normalize()] _FEATURE_METADATA:\n{_feature_metadata} ; TYPE: {str(type(_feature_metadata))}')
 
             # retrieve request numeric transformer
             numeric_transformer = get_transformer(_feature_metadata, preprocessing_parameters)
+            print(f'\n[ALEX_TEST] [NumberFeatureMixin.add_feature_data().normalize()] NUMERIC_TRANSFORMER:\n{numeric_transformer} ; TYPE: {str(type(numeric_transformer))}')
 
             # transform input numeric values with specified transformer
             transformed_values = numeric_transformer.transform(series.values)
+            print(f'\n[ALEX_TEST] [NumberFeatureMixin.add_feature_data().normalize()] TRANSFORMED_VALUES:\n{transformed_values} ; TYPE: {str(type(transformed_values))}')
+            # TODO: <Alex>ALEX</Alex>
+            a = pd.Series(transformed_values, index=series.index)
+            print(f'\n[ALEX_TEST] [NumberFeatureMixin.add_feature_data().normalize()] RETURNING_TRANSFORMED_SERIES:\n{a} ; TYPE: {str(type(a))}')
+            # TODO: <Alex>ALEX</Alex>
 
             # return transformed values with same index values as original series.
             return pd.Series(transformed_values, index=series.index)

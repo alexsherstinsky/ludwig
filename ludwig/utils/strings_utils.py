@@ -474,9 +474,14 @@ def create_vocabulary_single_token(
             str2idx: Map of symbol to index.
             str2freq: Map of symbol to frequency.
     """
+    print(f'\n[ALEX_TEST] [STRINGS_UTILS.PY::create_vocabulary_single_token()] DATA:\n{data} ; TYPE: {str(type(data))}')
+    print(f'\n[ALEX_TEST] [STRINGS_UTILS.PY::create_vocabulary_single_token()] PROCESSOR:\n{processor} ; TYPE: {str(type(processor))}')
     processed_counts = data.str.strip().value_counts(sort=True)
+    print(f'\n[ALEX_TEST] [STRINGS_UTILS.PY::create_vocabulary_single_token()] PROCESSED_COUNTS-0:\n{processed_counts} ; TYPE: {str(type(processed_counts))}')
     processed_counts = processor.compute(processed_counts)
+    print(f'\n[ALEX_TEST] [STRINGS_UTILS.PY::create_vocabulary_single_token()] PROCESSED_COUNTS-1:\n{processed_counts} ; TYPE: {str(type(processed_counts))}')
     full_vocab = processed_counts.index.tolist()
+    print(f'\n[ALEX_TEST] [STRINGS_UTILS.PY::create_vocabulary_single_token()] FULL_VOCAB:\n{full_vocab} ; TYPE: {str(type(full_vocab))}')
     # Only add unknown symbol if num most frequent tokens is less than total number of unique tokens
     if num_most_frequent < len(full_vocab):
         vocab = [unknown_symbol] + full_vocab[:num_most_frequent]
